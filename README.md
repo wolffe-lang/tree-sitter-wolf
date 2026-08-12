@@ -9,4 +9,4 @@ best-effort port for highlighting, not a conformance artifact; the
 compiler and interpreter are the real parsers. Filled opportunistically
 between compiler sprints.
 
-Dual-licensed MIT or Apache-2.0.
+Licensed under GPL-3.0-or-later.
