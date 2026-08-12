@@ -3,16 +3,23 @@ on:
   push: {branches: [trunk]}
   pull_request:
 jobs:
-  grammar:
+  gate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - uses: actions/setup-node@v4
-        with: {node-version: '22'}
-      - run: npm ci || npm install
-      - name: generated parser is current
+      - name: scaffold integrity
         run: |
-          npx tree-sitter generate
-          git diff --exit-code -- src/ || { echo "::error::regenerate the parser: npx tree-sitter generate"; exit 1; }
-      - name: corpus tests
-        run: npx tree-sitter test
+          test -f README.md && test -f LICENSE-MIT && test -f LICENSE-APACHE
+      # The grammar gates arm themselves the day the grammar moves in
+      # from its vendored home; until then this repo is a scaffold and
+      # the gate says so honestly.
+      - name: grammar gates (when present)
+        run: |
+          if [ -f grammar.js ]; then
+            npm install
+            npx tree-sitter generate
+            git diff --exit-code -- src/
+            npx tree-sitter test
+          else
+            echo "scaffold repo: no grammar.js yet — gates armed for its arrival"
+          fi
