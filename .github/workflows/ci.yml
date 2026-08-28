@@ -7,19 +7,44 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
-      - name: scaffold integrity
+
+      - uses: actions/setup-node@v4
+        with: {node-version: '22'}
+
+      - name: install tree-sitter-cli (pinned by lockfile)
+        run: npm ci
+
+      # Gate 1: the committed generated parser is in sync with grammar.js.
+      # src/parser.c is committed on purpose — Helix's `hx -g build` and
+      # Zed's extension builder compile it straight from the repo and
+      # never run `tree-sitter generate` themselves.
+      - name: generated parser current
         run: |
-          test -f README.md && test -f LICENSE
-      # The grammar gates arm themselves the day the grammar moves in
-      # from its vendored home; until then this repo is a scaffold and
-      # the gate says so honestly.
-      - name: grammar gates (when present)
+          npx tree-sitter generate
+          git diff --exit-code -- src/
+
+      # Gate 2: the grammar's own corpus (test/corpus/*.txt).
+      - name: corpus tests
+        run: npx tree-sitter test
+
+      # Gate 3: the three query files load against the grammar.
+      - name: queries load
         run: |
-          if [ -f grammar.js ]; then
-            npm install
-            npx tree-sitter generate
-            git diff --exit-code -- src/
-            npx tree-sitter test
-          else
-            echo "scaffold repo: no grammar.js yet — gates armed for its arrival"
-          fi
+          printf 'fn main() -> !int {\n    print("hi, {who:>8}")\n    0\n}\n' > /tmp/q.lu
+          for q in highlights locals injections; do
+            npx tree-sitter query "queries/$q.scm" /tmp/q.lu --test >/dev/null
+          done
+
+      # Gate 4: wolf-lang's full corpus parses at ZERO ERROR nodes.
+      # The only exclusions are the corpus's own parse-tier
+      # counter-examples (`check: fail(E00xx|E01xx|E02xx)` directives) —
+      # files the spec itself says do not parse.
+      - name: checkout wolf-lang corpus
+        uses: actions/checkout@v5
+        with:
+          repository: wolffe-lang/wolf-lang
+          path: .wolf-lang
+          sparse-checkout: corpus
+
+      - name: wolf-lang corpus at zero ERRORs
+        run: TREE_SITTER="npx tree-sitter" sh script/parse-wolf-corpus.sh .wolf-lang/corpus

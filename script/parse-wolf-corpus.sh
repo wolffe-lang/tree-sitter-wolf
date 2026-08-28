@@ -33,7 +33,8 @@ for f in $(find "$CORPUS" -name '*.lu' | LC_ALL=C sort); do
   total=$((total + 1))
   # `tree-sitter parse -q` exits non-zero when the tree contains
   # ERROR/MISSING nodes.
-  if ! "$TS" parse -q "$f" >/dev/null 2>&1; then
+  # $TS unquoted on purpose: it may be a multi-word command (npx tree-sitter)
+  if ! $TS parse -q "$f" >/dev/null 2>&1; then
     failed=$((failed + 1))
     echo "$f" >>"$fail_list"
   fi
