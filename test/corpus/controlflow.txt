@@ -1,0 +1,298 @@
+==================
+if else chain on one logical statement
+==================
+
+let grade = if s > 90 { "a" } else if s > 80 { "b" } else { "c" }
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (if_expression
+      (binary_expression
+        (identifier)
+        (integer_literal))
+      (block
+        (expression_statement
+          (string_literal)))
+      (if_expression
+        (binary_expression
+          (identifier)
+          (integer_literal))
+        (block
+          (expression_statement
+            (string_literal)))
+        (block
+          (expression_statement
+            (string_literal)))))))
+
+==================
+match with payload patterns, guards, and or-patterns
+==================
+
+match tok {
+    Ident(name) => use_name(name)
+    Num(n) if n > 0 => n,
+    A | B => 0,
+    _ => -1
+}
+
+---
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_body
+        (match_arm
+          (constructor_pattern
+            (path
+              (identifier))
+            (identifier))
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (identifier)))))
+        (match_arm
+          (constructor_pattern
+            (path
+              (identifier))
+            (identifier))
+          (binary_expression
+            (identifier)
+            (integer_literal))
+          (identifier))
+        (match_arm
+          (or_pattern
+            (identifier)
+            (identifier))
+          (integer_literal))
+        (match_arm
+          (wildcard_pattern)
+          (unary_expression
+            (integer_literal)))))))
+
+==================
+match arm bodies may be blocks without commas
+==================
+
+match x {
+    0 => { print("zero") }
+    n @ 1 => { print("one {n}") }
+    _ => {}
+}
+
+---
+
+(source_file
+  (expression_statement
+    (match_expression
+      (identifier)
+      (match_body
+        (match_arm
+          (integer_literal)
+          (block
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (string_literal)))))))
+        (match_arm
+          (at_pattern
+            (identifier)
+            (integer_literal))
+          (block
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (string_literal
+                      (interpolation
+                        (identifier)))))))))
+        (match_arm
+          (wildcard_pattern)
+          (block))))))
+
+==================
+for over a range with a wildcard pattern
+==================
+
+for _ in poem.words() { words += 1 }
+for (k, v) in m.entries() {
+    print("{k}={v}")
+}
+
+---
+
+(source_file
+  (expression_statement
+    (for_expression
+      (wildcard_pattern)
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments))
+      (block
+        (assignment_statement
+          (identifier)
+          (integer_literal)))))
+  (expression_statement
+    (for_expression
+      (tuple_pattern
+        (identifier)
+        (identifier))
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments))
+      (block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal
+                  (interpolation
+                    (identifier))
+                  (interpolation
+                    (identifier)))))))))))
+
+==================
+while and loop
+==================
+
+while n > 0 { n -= 1 }
+loop {
+    if done() { break }
+}
+
+---
+
+(source_file
+  (expression_statement
+    (while_expression
+      (binary_expression
+        (identifier)
+        (integer_literal))
+      (block
+        (assignment_statement
+          (identifier)
+          (integer_literal)))))
+  (expression_statement
+    (loop_expression
+      (block
+        (expression_statement
+          (if_expression
+            (call_expression
+              (identifier)
+              (arguments))
+            (block
+              (expression_statement
+                (break_expression)))))))))
+
+==================
+jumps carry optional values
+==================
+
+fn f() -> !int {
+    if bad { return err }
+    for x in xs {
+        if x == 0 { continue }
+        break x
+    }
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (expression_statement
+        (if_expression
+          (identifier)
+          (block
+            (expression_statement
+              (return_expression
+                (identifier))))))
+      (expression_statement
+        (for_expression
+          (identifier)
+          (identifier)
+          (block
+            (expression_statement
+              (if_expression
+                (binary_expression
+                  (identifier)
+                  (integer_literal))
+                (block
+                  (expression_statement
+                    (continue_expression)))))
+            (expression_statement
+              (break_expression
+                (identifier))))))
+      (expression_statement
+        (integer_literal)))))
+
+==================
+row tags are bare identifiers in checked positions
+==================
+
+fn parse(s: str) -> int ! {BadDigit(u8), Overflow} {
+    if s.len() == 0 { return Overflow }
+    7
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (rowed_type
+      (type_path
+        (path
+          (identifier)))
+      (error_row
+        (row_entry
+          (path
+            (identifier))
+          (type_path
+            (path
+              (identifier))))
+        (row_entry
+          (path
+            (identifier)))))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (call_expression
+              (field_expression
+                (identifier)
+                (identifier))
+              (arguments))
+            (integer_literal))
+          (block
+            (expression_statement
+              (return_expression
+                (identifier))))))
+      (expression_statement
+        (integer_literal)))))

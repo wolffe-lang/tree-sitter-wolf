@@ -100,9 +100,11 @@ module.exports = grammar({
   rules: {
     // ================================================== unit [gram.item.unit]
 
-    source_file: $ => seq(
-      optional($.shebang),
-      repeat(choice($._terminator, $._statement)),
+    // The shebang rides the statement repeat: the spec confines it to
+    // byte offset 0 ([gram.lex.shebang]), a constraint LR cannot see —
+    // a mid-file `#!` line parses here (permissive; stray-byte tier).
+    source_file: $ => repeat(
+      choice($._terminator, $.shebang, $._statement),
     ),
 
     // [gram.lex.shebang] — trivia line; only meaningful at offset 0.

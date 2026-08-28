@@ -1,0 +1,186 @@
+==================
+newline terminates after a complete statement
+==================
+
+let a = b
+let c = d
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (identifier))
+  (let_declaration
+    (identifier)
+    (identifier)))
+
+==================
+trailing operator continues the statement
+==================
+
+let x = a +
+    b
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (binary_expression
+      (identifier)
+      (identifier))))
+
+==================
+trailing dot continues a method chain
+==================
+
+let n = list.
+    map(f).
+    count()
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (field_expression
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (identifier))))
+        (identifier))
+      (arguments))))
+
+==================
+newlines never terminate inside parentheses
+==================
+
+let v = f(
+    a,
+    b,
+)
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (identifier))
+        (argument
+          (identifier))))))
+
+==================
+semicolons separate a single-line block
+==================
+
+fn usage() -> int { print(USAGE); return 2 }
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))
+      (expression_statement
+        (return_expression
+          (integer_literal))))))
+
+==================
+destructuring bindings
+==================
+
+let (a, b) = pair
+var (x, _) = pos
+
+---
+
+(source_file
+  (let_declaration
+    (tuple_pattern
+      (identifier)
+      (identifier))
+    (identifier))
+  (var_declaration
+    (tuple_pattern
+      (identifier)
+      (wildcard_pattern))
+    (identifier)))
+
+==================
+compound assignment
+==================
+
+count += 1
+mask <<= 2
+bits |= flag
+
+---
+
+(source_file
+  (assignment_statement
+    (identifier)
+    (integer_literal))
+  (assignment_statement
+    (identifier)
+    (integer_literal))
+  (assignment_statement
+    (identifier)
+    (identifier)))
+
+==================
+defer and errdefer
+==================
+
+defer f.close()
+errdefer temp.remove()
+
+---
+
+(source_file
+  (defer_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments)))
+  (defer_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments))))
+
+==================
+var declaration with annotation
+==================
+
+var words: int = 0
+
+---
+
+(source_file
+  (var_declaration
+    (identifier)
+    (type_path
+      (path
+        (identifier)))
+    (integer_literal)))

@@ -1,0 +1,494 @@
+==================
+function with generics, modes, and an error-row return
+==================
+
+fn top[T](m: Map[T, int], n: int) -> List[(T, int)] {
+    m.entries()
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (generic_parameters
+      (generic_parameter
+        (identifier)))
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))
+          (type_arguments
+            (identifier)
+            (identifier))))
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier))
+      (type_arguments
+        (tuple_expression
+          (identifier)
+          (identifier))))
+    (block
+      (expression_statement
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments))))))
+
+==================
+parameter modes precede the name
+==================
+
+fn f(mut x: int, take conn: Conn) -> !int {
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (parameter_mode)
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (parameter
+        (parameter_mode)
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+self receiver with a view set
+==================
+
+fn norm(mut self.{x, y}) {
+    self.x = 0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (self_parameter
+        (parameter_mode)
+        (self)
+        (view_set
+          (identifier)
+          (identifier))))
+    (block
+      (assignment_statement
+        (field_expression
+          (identifier)
+          (identifier))
+        (integer_literal)))))
+
+==================
+bodyless extern function
+==================
+
+extern "c" fn malloc(size: usize) -> *u8
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (pointer_type
+      (type_path
+        (path
+          (identifier))))))
+
+==================
+comptime and export qualifiers
+==================
+
+comptime fn table() -> int { 42 }
+export fn wolf_entry() -> int { 0 }
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier)
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (function_qualifier)
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+struct item with fields
+==================
+
+struct Point {
+    x: f64,
+    y: f64,
+}
+
+---
+
+(source_file
+  (struct_item
+    (identifier)
+    (field_declaration_list
+      (field_declaration
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (field_declaration
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))))
+
+==================
+enum item with payload variants
+==================
+
+enum Token {
+    Ident(str),
+    Num(int),
+    Eof,
+}
+
+---
+
+(source_file
+  (enum_item
+    (identifier)
+    (enum_variant_list
+      (enum_variant
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (enum_variant
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (enum_variant
+        (identifier)))))
+
+==================
+type alias and distinct type
+==================
+
+type Meters = f64
+type Cover = distinct Song
+
+---
+
+(source_file
+  (type_item
+    (identifier)
+    (type_path
+      (path
+        (identifier))))
+  (type_item
+    (identifier)
+    (prefixed_type
+      (type_path
+        (path
+          (identifier))))))
+
+==================
+general form: type = struct
+==================
+
+type Name = struct {
+    first: str
+    last: str
+}
+
+---
+
+(source_file
+  (type_item
+    (identifier)
+    (struct_definition
+      (field_declaration_list
+        (field_declaration
+          (identifier)
+          (type_path
+            (path
+              (identifier))))
+        (field_declaration
+          (identifier)
+          (type_path
+            (path
+              (identifier))))))))
+
+==================
+trait with required and provided members
+==================
+
+trait Show {
+    fn show(self) -> str
+    fn shout(self) -> str { self.show() }
+}
+
+---
+
+(source_file
+  (trait_item
+    (identifier)
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters
+          (self_parameter
+            (self)))
+        (type_path
+          (path
+            (identifier))))
+      (function_item
+        (identifier)
+        (parameters
+          (self_parameter
+            (self)))
+        (type_path
+          (path
+            (identifier)))
+        (block
+          (expression_statement
+            (call_expression
+              (field_expression
+                (identifier)
+                (identifier))
+              (arguments))))))))
+
+==================
+impl and trait-for impl
+==================
+
+impl[T] List[T] {
+    fn empty(self) -> bool { self.len() == 0 }
+}
+
+impl Show for Point {
+    fn show(self) -> str { "point" }
+}
+
+---
+
+(source_file
+  (impl_item
+    (generic_parameters
+      (generic_parameter
+        (identifier)))
+    (type_path
+      (path
+        (identifier))
+      (type_arguments
+        (identifier)))
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters
+          (self_parameter
+            (self)))
+        (type_path
+          (path
+            (identifier)))
+        (block
+          (expression_statement
+            (binary_expression
+              (call_expression
+                (field_expression
+                  (identifier)
+                  (identifier))
+                (arguments))
+              (integer_literal)))))))
+  (impl_item
+    (type_path
+      (path
+        (identifier)))
+    (type_path
+      (path
+        (identifier)))
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters
+          (self_parameter
+            (self)))
+        (type_path
+          (path
+            (identifier)))
+        (block
+          (expression_statement
+            (string_literal)))))))
+
+==================
+imports
+==================
+
+use std.fs
+use std.{fs, net}
+use verylongname as vln
+import c "stdlib.h"
+
+---
+
+(source_file
+  (use_declaration
+    (use_path
+      (identifier)
+      (identifier)))
+  (use_declaration
+    (use_path
+      (identifier)
+      (use_group
+        (identifier)
+        (identifier))))
+  (use_declaration
+    (use_path
+      (identifier))
+    (identifier))
+  (import_c_declaration
+    (string_literal)))
+
+==================
+const item and pub visibility
+==================
+
+pub const LIMIT: int = 4096
+pub(pkg) fn helper() -> int { 1 }
+
+---
+
+(source_file
+  (const_declaration
+    (visibility_modifier)
+    (identifier)
+    (type_path
+      (path
+        (identifier)))
+    (integer_literal))
+  (function_item
+    (visibility_modifier)
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+attributes: structured, nested, key-value
+==================
+
+#[trusted]
+#[cfg(target = "x86_64"), allow(w1301)]
+#[consttime(public(len))]
+fn f() -> int { 0 }
+
+---
+
+(source_file
+  (function_item
+    (attribute
+      (attr_item
+        (path
+          (identifier))))
+    (attribute
+      (attr_item
+        (path
+          (identifier))
+        (attr_item
+          (path
+            (identifier))
+          (string_literal)))
+      (attr_item
+        (path
+          (identifier))
+        (attr_item
+          (path
+            (identifier)))))
+    (attribute
+      (attr_item
+        (path
+          (identifier))
+        (attr_item
+          (path
+            (identifier))
+          (attr_item
+            (path
+              (identifier))))))
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+shebang is trivia at offset zero
+==================
+
+#!/usr/bin/env wolf
+fn main() -> !int { 0 }
+
+---
+
+(source_file
+  (shebang)
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (expression_statement
+        (integer_literal)))))

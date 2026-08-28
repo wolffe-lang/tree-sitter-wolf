@@ -1,0 +1,155 @@
+==================
+scope binds a handle; spawning is a method
+==================
+
+scope s {
+    s.spawn(fn() { work() })
+}
+
+---
+
+(source_file
+  (expression_statement
+    (scope_expression
+      (identifier)
+      (block
+        (expression_statement
+          (call_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (arguments
+              (argument
+                (closure_expression
+                  (closure_parameters)
+                  (block
+                    (expression_statement
+                      (call_expression
+                        (identifier)
+                        (arguments)))))))))))))
+
+==================
+spawn proc under the supervisor
+==================
+
+let w = spawn proc worker(cfg, 3)
+w.monitor()
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (spawn_expression
+      (path
+        (identifier))
+      (arguments
+        (argument
+          (identifier))
+        (argument
+          (integer_literal)))))
+  (expression_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments))))
+
+==================
+select with from and timeout arms
+==================
+
+select {
+    msg from ch => handle(msg),
+    Done(code) from ctl => { finish(code) }
+    timeout(ms(100)) => retry()
+}
+
+---
+
+(source_file
+  (expression_statement
+    (select_expression
+      (select_arm
+        (identifier)
+        (identifier)
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))
+      (select_arm
+        (constructor_pattern
+          (path
+            (identifier))
+          (identifier))
+        (identifier)
+        (block
+          (expression_statement
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier)))))))
+      (select_arm
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (integer_literal))))
+        (call_expression
+          (identifier)
+          (arguments))))))
+
+==================
+when acquires its whole set at once
+==================
+
+when (a, b) {
+    a.push(b.pop())
+}
+
+---
+
+(source_file
+  (expression_statement
+    (when_expression
+      (identifier)
+      (identifier)
+      (block
+        (expression_statement
+          (call_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (arguments
+              (argument
+                (call_expression
+                  (field_expression
+                    (identifier)
+                    (identifier))
+                  (arguments))))))))))
+
+==================
+concurrency verbs move and sync
+==================
+
+ch.send(move r)
+let f = freeze big
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (unary_expression
+            (identifier))))))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (identifier))))

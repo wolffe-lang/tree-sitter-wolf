@@ -1,0 +1,389 @@
+==================
+error unions: bang type and postfix rows
+==================
+
+fn a() -> !int { 0 }
+fn b() -> int ! {Tag(u8), io.Error} { 0 }
+fn c() -> !() { }
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (identifier)
+    (parameters)
+    (rowed_type
+      (type_path
+        (path
+          (identifier)))
+      (error_row
+        (row_entry
+          (path
+            (identifier))
+          (type_path
+            (path
+              (identifier))))
+        (row_entry
+          (path
+            (identifier)
+            (identifier)))))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (unit_type))
+    (block)))
+
+==================
+rows flatten and stay first-class in any type position
+==================
+
+fn f(x: int ! {a} ! {b}) -> !int ! {c} {
+    0
+}
+
+let v: str ! {Missing} = lookup(k)
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (rowed_type
+          (rowed_type
+            (type_path
+              (path
+                (identifier)))
+            (error_row
+              (row_entry
+                (path
+                  (identifier)))))
+          (error_row
+            (row_entry
+              (path
+                (identifier)))))))
+    (error_union_type
+      (rowed_type
+        (type_path
+          (path
+            (identifier)))
+        (error_row
+          (row_entry
+            (path
+              (identifier))))))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (let_declaration
+    (identifier)
+    (rowed_type
+      (type_path
+        (path
+          (identifier)))
+      (error_row
+        (row_entry
+          (path
+            (identifier)))))
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (identifier))))))
+
+==================
+open rows
+==================
+
+fn g() -> int ! {Tag, ..} { 0 }
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (rowed_type
+      (type_path
+        (path
+          (identifier)))
+      (error_row
+        (row_entry
+          (path
+            (identifier)))
+        (open_row)))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+prefix type keywords
+==================
+
+let n: handle Node = graph.root()
+let c: shared Config = shared (Config { limit: 1 })
+let p: weak Parent = child.up()
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (prefixed_type
+      (type_path
+        (path
+          (identifier))))
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments)))
+  (let_declaration
+    (identifier)
+    (prefixed_type
+      (type_path
+        (path
+          (identifier))))
+    (unary_expression
+      (parenthesized_expression
+        (struct_expression
+          (type_path
+            (path
+              (identifier)))
+          (field_initializer_list
+            (field_initializer
+              (identifier)
+              (integer_literal)))))))
+  (let_declaration
+    (identifier)
+    (prefixed_type
+      (type_path
+        (path
+          (identifier))))
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments))))
+
+==================
+dyn trait type
+==================
+
+fn draw(shape: dyn Shape) {
+    shape.render()
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (dyn_type
+          (path
+            (identifier)))))
+    (block
+      (expression_statement
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments))))))
+
+==================
+function types and tuples
+==================
+
+let cb: fn(int, str) -> bool = check
+let pair: (int, str) = (1, "x")
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (function_type
+      (type_path
+        (path
+          (identifier)))
+      (type_path
+        (path
+          (identifier)))
+      (type_path
+        (path
+          (identifier))))
+    (identifier))
+  (let_declaration
+    (identifier)
+    (tuple_type
+      (type_path
+        (path
+          (identifier)))
+      (type_path
+        (path
+          (identifier))))
+    (tuple_expression
+      (integer_literal)
+      (string_literal))))
+
+==================
+raw pointer type in the unsafe tier
+==================
+
+extern "c" fn malloc(n: usize) -> *u8
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (pointer_type
+      (type_path
+        (path
+          (identifier))))))
+
+==================
+generic bounds and comptime type parameters
+==================
+
+fn sort[T: Ord](xs: List[T]) -> List[T] { xs }
+fn make[T: type](n: int) -> List[T] { List[T]() }
+fn both[T: Eq + Ord](x: T) -> T { x }
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (generic_parameters
+      (generic_parameter
+        (identifier)
+        (trait_bound
+          (path
+            (identifier)))))
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))
+          (type_arguments
+            (identifier)))))
+    (type_path
+      (path
+        (identifier))
+      (type_arguments
+        (identifier)))
+    (block
+      (expression_statement
+        (identifier))))
+  (function_item
+    (identifier)
+    (generic_parameters
+      (generic_parameter
+        (identifier)
+        (type_keyword)))
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier))
+      (type_arguments
+        (identifier)))
+    (block
+      (expression_statement
+        (call_expression
+          (index_expression
+            (identifier)
+            (identifier))
+          (arguments)))))
+  (function_item
+    (identifier)
+    (generic_parameters
+      (generic_parameter
+        (identifier)
+        (trait_bound
+          (path
+            (identifier))
+          (path
+            (identifier)))))
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (identifier)))))
+
+==================
+const generic arguments are expressions
+==================
+
+fn shuffle[N: type](b: Buf[N + 1]) -> Buf[1 + N] {
+    b
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (generic_parameters
+      (generic_parameter
+        (identifier)
+        (type_keyword)))
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))
+          (type_arguments
+            (binary_expression
+              (identifier)
+              (integer_literal))))))
+    (type_path
+      (path
+        (identifier))
+      (type_arguments
+        (binary_expression
+          (integer_literal)
+          (identifier))))
+    (block
+      (expression_statement
+        (identifier)))))

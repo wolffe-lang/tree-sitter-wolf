@@ -1,0 +1,106 @@
+==================
+region sugar, named and anonymous
+==================
+
+region tmp {
+    let x = build()
+}
+
+let cfg = freeze region { load() }
+
+---
+
+(source_file
+  (expression_statement
+    (region_expression
+      (identifier)
+      (block
+        (let_declaration
+          (identifier)
+          (call_expression
+            (identifier)
+            (arguments))))))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (region_expression
+        (block
+          (expression_statement
+            (call_expression
+              (identifier)
+              (arguments))))))))
+
+==================
+region values and strategies
+==================
+
+let r = region()
+let rc = region(rc)
+region pool_r: pool(Node) {
+    grow()
+}
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (region_expression))
+  (let_declaration
+    (identifier)
+    (region_expression
+      (region_strategy)))
+  (expression_statement
+    (region_expression
+      (identifier)
+      (region_strategy
+        (type_path
+          (path
+            (identifier))))
+      (block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (arguments)))))))
+
+==================
+in-block allocation targeting
+==================
+
+in r {
+    let n = Node { next: nil }
+}
+
+---
+
+(source_file
+  (expression_statement
+    (in_expression
+      (identifier)
+      (block
+        (let_declaration
+          (identifier)
+          (struct_expression
+            (type_path
+              (path
+                (identifier)))
+            (field_initializer_list
+              (field_initializer
+                (identifier)
+                (identifier)))))))))
+
+==================
+freeze is a prefix-tier operator
+==================
+
+let ok = freeze r == x
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (binary_expression
+      (unary_expression
+        (identifier))
+      (identifier))))

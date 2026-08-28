@@ -1,0 +1,563 @@
+==================
+precedence: mul over add over shift over compare
+==================
+
+let x = a + b * c << d == e
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (binary_expression
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (binary_expression
+            (identifier)
+            (identifier)))
+        (identifier))
+      (identifier))))
+
+==================
+comparison does not chain into logic
+==================
+
+let ok = a < b && c >= d
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (binary_expression
+      (binary_expression
+        (identifier)
+        (identifier))
+      (binary_expression
+        (identifier)
+        (identifier)))))
+
+==================
+unary operators and casts
+==================
+
+let a = !flag
+let b = -n as f64
+let c = *ptr
+let d = &x
+let e = &mut y
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (cast_expression
+      (unary_expression
+        (identifier))
+      (type_path
+        (path
+          (identifier)))))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (reference_expression
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (reference_expression
+      (identifier))))
+
+==================
+value verbs are prefix operators
+==================
+
+ch.send(move r)
+let a = shared (Cfg { limit: 7 })
+let b = copy big
+let c = freeze r
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (unary_expression
+            (identifier))))))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (parenthesized_expression
+        (struct_expression
+          (type_path
+            (path
+              (identifier)))
+          (field_initializer_list
+            (field_initializer
+              (identifier)
+              (integer_literal)))))))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (unary_expression
+      (identifier))))
+
+==================
+postfix question mark propagates
+==================
+
+let text = fs.read(path)?
+let n = parse(text)?.count()
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (try_expression
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments
+          (argument
+            (identifier))))))
+  (let_declaration
+    (identifier)
+    (call_expression
+      (field_expression
+        (try_expression
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (identifier)))))
+        (identifier))
+      (arguments))))
+
+==================
+call-site argument modes
+==================
+
+f(mut x)
+push(take conn, 1)
+pool[mut prev]
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (parameter_mode)
+          (identifier)))))
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (parameter_mode)
+          (identifier))
+        (argument
+          (integer_literal)))))
+  (expression_statement
+    (index_expression
+      (identifier)
+      (parameter_mode)
+      (identifier))))
+
+==================
+moded receiver before a member call
+==================
+
+(mut p).norm()
+(take conn).close()
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (field_expression
+        (moded_receiver
+          (parameter_mode)
+          (identifier))
+        (identifier))
+      (arguments)))
+  (expression_statement
+    (call_expression
+      (field_expression
+        (moded_receiver
+          (parameter_mode)
+          (identifier))
+        (identifier))
+      (arguments))))
+
+==================
+index and generic application are one postfix shape
+==================
+
+let v = m[k]
+let l = List[int]()
+let c = channel[region]
+let h = List[handle Node]()
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (call_expression
+      (index_expression
+        (identifier)
+        (identifier))
+      (arguments)))
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (region_type)))
+  (let_declaration
+    (identifier)
+    (call_expression
+      (index_expression
+        (identifier)
+        (prefixed_type
+          (type_path
+            (path
+              (identifier)))))
+      (arguments))))
+
+==================
+ranges and from-end endpoints
+==================
+
+let a = s[1..5]
+let b = s[^13..]
+let c = s[..^1]
+let d = 0..=n
+let e = s[^1]
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (range_expression
+        (integer_literal)
+        (integer_literal))))
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (range_expression
+        (from_end_expression
+          (integer_literal)))))
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (range_expression
+        (from_end_expression
+          (integer_literal)))))
+  (let_declaration
+    (identifier)
+    (range_expression
+      (integer_literal)))
+  (expression_statement
+    (identifier))
+  (let_declaration
+    (identifier)
+    (index_expression
+      (identifier)
+      (from_end_expression
+        (integer_literal)))))
+
+==================
+member access on an integer literal
+==================
+
+let kb = 4096.kb
+let f = 1.0e5
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (field_expression
+      (integer_literal)
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (float_literal)))
+
+==================
+tuple access by index
+==================
+
+let x = pair.0
+let y = triple.1.0
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (field_expression
+      (identifier)
+      (integer_literal)))
+  (let_declaration
+    (identifier)
+    (field_expression
+      (field_expression
+        (identifier)
+        (integer_literal))
+      (integer_literal))))
+
+==================
+else defaulting and the error handler form
+==================
+
+let port = cfg.get("port") else 8080
+let mid = s.get(4..8) else |_| ""
+let v = risky() else |e| { log(e); 0 }
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (else_expression
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments
+          (argument
+            (string_literal))))
+      (integer_literal)))
+  (let_declaration
+    (identifier)
+    (else_expression
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments
+          (argument
+            (range_expression
+              (integer_literal)
+              (integer_literal)))))
+      (else_handler
+        (wildcard_pattern)
+        (string_literal))))
+  (let_declaration
+    (identifier)
+    (else_expression
+      (call_expression
+        (identifier)
+        (arguments))
+      (else_handler
+        (identifier)
+        (block
+          (expression_statement
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier)))))
+          (expression_statement
+            (integer_literal)))))))
+
+==================
+closure with expression body extends maximally
+==================
+
+let top = xs.sorted_by(fn(a, b) b.1 <=> a.1)
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (closure_expression
+            (closure_parameters
+              (closure_parameter
+                (identifier))
+              (closure_parameter
+                (identifier)))
+            (binary_expression
+              (field_expression
+                (identifier)
+                (integer_literal))
+              (field_expression
+                (identifier)
+                (integer_literal)))))))))
+
+==================
+closure as a non-final argument stops at the comma
+==================
+
+let mixed = zip(xs, fn(p) p.0 + p.1, 100)
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (identifier))
+        (argument
+          (closure_expression
+            (closure_parameters
+              (closure_parameter
+                (identifier)))
+            (binary_expression
+              (field_expression
+                (identifier)
+                (integer_literal))
+              (field_expression
+                (identifier)
+                (integer_literal)))))
+        (argument
+          (integer_literal))))))
+
+==================
+block-bodied closure
+==================
+
+s.spawn(fn() {
+    work()
+})
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (closure_expression
+            (closure_parameters)
+            (block
+              (expression_statement
+                (call_expression
+                  (identifier)
+                  (arguments))))))))))
+
+==================
+struct literal with shorthand
+==================
+
+let p = Point { x: 1, y }
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (struct_expression
+      (type_path
+        (path
+          (identifier)))
+      (field_initializer_list
+        (field_initializer
+          (identifier)
+          (integer_literal))
+        (shorthand_field_initializer
+          (identifier))))))
+
+==================
+struct literal parenthesized in a condition
+==================
+
+if x == (Point { x: 0 }) { f() }
+
+---
+
+(source_file
+  (expression_statement
+    (if_expression
+      (binary_expression
+        (identifier)
+        (parenthesized_expression
+          (struct_expression
+            (type_path
+              (path
+                (identifier)))
+            (field_initializer_list
+              (field_initializer
+                (identifier)
+                (integer_literal))))))
+      (block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (arguments)))))))
+
+==================
+tuples and grouping
+==================
+
+let pair = (1, "two")
+let one = (a,)
+let grouped = (a + b) * c
+
+---
+
+(source_file
+  (let_declaration
+    (identifier)
+    (tuple_expression
+      (integer_literal)
+      (string_literal)))
+  (let_declaration
+    (identifier)
+    (tuple_expression
+      (identifier)))
+  (let_declaration
+    (identifier)
+    (binary_expression
+      (parenthesized_expression
+        (binary_expression
+          (identifier)
+          (identifier)))
+      (identifier))))

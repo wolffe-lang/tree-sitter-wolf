@@ -1,0 +1,95 @@
+==================
+unsafe block
+==================
+
+unsafe {
+    let v = *p
+}
+
+---
+
+(source_file
+  (expression_statement
+    (unsafe_expression
+      (block
+        (let_declaration
+          (identifier)
+          (unary_expression
+            (identifier)))))))
+
+==================
+unsafe c with a capture list holds opaque C text
+==================
+
+unsafe c [buf, len] {
+    memset(buf, 0, len);
+    if (len > 0) { buf[0] = 1; }
+}
+
+---
+
+(source_file
+  (expression_statement
+    (unsafe_expression
+      (capture_list
+        (identifier)
+        (identifier))
+      (c_block
+        (c_code)
+        (c_block
+          (c_code))))))
+
+==================
+asm expression with directed operands
+==================
+
+unsafe {
+    asm {
+        "add {t}, 35",
+        t = inout(reg) x,
+        in(reg) y,
+    }
+}
+
+---
+
+(source_file
+  (expression_statement
+    (unsafe_expression
+      (block
+        (expression_statement
+          (asm_expression
+            (string_literal
+              (interpolation
+                (identifier)))
+            (asm_operand
+              (identifier)
+              (identifier)
+              (identifier))
+            (asm_operand
+              (identifier)
+              (identifier))))))))
+
+==================
+borrow and assume are unsafe-tier forms
+==================
+
+unsafe {
+    let view = borrow buf from r
+    assume noalias a, b
+}
+
+---
+
+(source_file
+  (expression_statement
+    (unsafe_expression
+      (block
+        (let_declaration
+          (identifier)
+          (borrow_expression
+            (identifier)
+            (identifier)))
+        (assume_statement
+          (identifier)
+          (identifier))))))
