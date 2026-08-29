@@ -492,3 +492,31 @@ fn main() -> !int { 0 }
     (block
       (expression_statement
         (integer_literal)))))
+
+==================
+attributes: the file-wide origin marker
+==================
+
+#!/usr/bin/env -S wolf run
+#![index(1)]
+
+fn f() -> int { 0 }
+
+---
+
+(source_file
+  (shebang)
+  (inner_attribute
+    (attr_item
+      (path
+        (identifier))
+      (integer_literal)))
+  (function_item
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal)))))
