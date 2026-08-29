@@ -18,6 +18,10 @@
           },
           {
             "type": "SYMBOL",
+            "name": "inner_attribute"
+          },
+          {
+            "type": "SYMBOL",
             "name": "_statement"
           }
         ]
@@ -27,7 +31,7 @@
       "type": "TOKEN",
       "content": {
         "type": "PATTERN",
-        "value": "#![^\\r\\n]*"
+        "value": "#!([^\\[\\r\\n][^\\r\\n]*)?"
       }
     },
     "line_comment": {
@@ -1811,6 +1815,56 @@
         {
           "type": "STRING",
           "value": "#["
+        },
+        {
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "SYMBOL",
+              "name": "attr_item"
+            },
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SEQ",
+                "members": [
+                  {
+                    "type": "STRING",
+                    "value": ","
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "attr_item"
+                  }
+                ]
+              }
+            },
+            {
+              "type": "CHOICE",
+              "members": [
+                {
+                  "type": "STRING",
+                  "value": ","
+                },
+                {
+                  "type": "BLANK"
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "STRING",
+          "value": "]"
+        }
+      ]
+    },
+    "inner_attribute": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "STRING",
+          "value": "#!["
         },
         {
           "type": "SEQ",

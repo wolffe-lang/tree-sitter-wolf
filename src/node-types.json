@@ -6749,6 +6749,21 @@
     }
   },
   {
+    "type": "inner_attribute",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "attr_item",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "interpolation",
     "named": true,
     "fields": {},
@@ -10319,6 +10334,10 @@
           "named": true
         },
         {
+          "type": "inner_attribute",
+          "named": true
+        },
+        {
           "type": "let_declaration",
           "named": true
         },
@@ -12452,6 +12471,10 @@
   },
   {
     "type": "\"\"\"",
+    "named": false
+  },
+  {
+    "type": "#![",
     "named": false
   },
   {
