@@ -104,11 +104,13 @@ module.exports = grammar({
     // byte offset 0 ([gram.lex.shebang]), a constraint LR cannot see —
     // a mid-file `#!` line parses here (permissive; stray-byte tier).
     source_file: $ => repeat(
-      choice($._terminator, $.shebang, $._statement),
+      choice($._terminator, $.shebang, $.inner_attribute, $._statement),
     ),
 
-    // [gram.lex.shebang] — trivia line; only meaningful at offset 0.
-    shebang: _ => token(/#![^\r\n]*/),
+    // [gram.lex.shebang] — trivia line; only meaningful at offset 0,
+    // and never when `[` follows the `#!`: `#![…]` is the file-wide
+    // attribute opener ([gram.attr.index]).
+    shebang: _ => token(/#!([^\[\r\n][^\r\n]*)?/),
 
     // ============================================ trivia [gram.lex.comment]
 
@@ -385,6 +387,11 @@ module.exports = grammar({
     // --------------------------------------- attributes [gram.item.attr]
 
     attribute: $ => seq('#[', commaSep1($.attr_item), ']'),
+
+    // [gram.attr.index] — the file-wide form (`#![index(1)]`). The
+    // spec confines it to the top of the file (E0211 elsewhere), a
+    // position this superset grammar does not enforce.
+    inner_attribute: $ => seq('#![', commaSep1($.attr_item), ']'),
 
     attr_item: $ => seq(
       $.path,

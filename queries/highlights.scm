@@ -105,6 +105,7 @@
 ; ---------------------------------------------------------- attributes
 
 (attribute) @attribute
+(inner_attribute) @attribute
 (shebang) @comment
 
 ; ------------------------------------------------------------ keywords
