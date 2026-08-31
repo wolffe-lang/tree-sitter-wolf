@@ -939,6 +939,7 @@ module.exports = grammar({
     _literal: $ => choice(
       $.integer_literal,
       $.float_literal,
+      $.char_literal,
       $.string_literal,
       $.multiline_string_literal,
       $.raw_string_literal,
@@ -953,6 +954,22 @@ module.exports = grammar({
       /0x[0-9a-fA-F][0-9a-fA-F_]*/,
       /0o[0-7][0-7_]*/,
       /0b[01][01_]*/,
+    )),
+
+    // [gram.lex.char] (s121, D58) — one Unicode scalar between single
+    // quotes: `'a'`, `'🐺'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F43A}'`.
+    // The escape set is the string set plus `\'`; `\u{…}` takes hex
+    // digits (the spec says one to six; the token is permissive and the
+    // non-scalar refusals — surrogates, > 0x10FFFF, E0110 — are sema's).
+    char_literal: _ => token(seq(
+      "'",
+      choice(
+        /[^'\\\r\n]/,
+        /\\[ntr0\\'"]/,
+        /\\x[0-9a-fA-F]{2}/,
+        /\\u\{[0-9a-fA-F]+\}/,
+      ),
+      "'",
     )),
 
     // Digits on BOTH sides of the dot ([gram.lex.number]); `1.e5` is
