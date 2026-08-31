@@ -21,6 +21,10 @@
 (closure_parameter name: (identifier) @local.definition.parameter)
 (binder pattern: (identifier) @local.definition.var)
 (binder pattern: (tuple_pattern (identifier) @local.definition.var))
+; struct-pattern shorthand `Point { x }` binds the field's name;
+; the explicit form `x: pat` binds whatever pat binds.
+(field_pattern !pattern name: (identifier) @local.definition.var)
+(field_pattern pattern: (identifier) @local.definition.var)
 (const_declaration name: (identifier) @local.definition.constant)
 (for_expression pattern: (identifier) @local.definition.var)
 (for_expression pattern: (tuple_pattern (identifier) @local.definition.var))

@@ -63,6 +63,9 @@
 (generic_parameter name: (identifier) @type.parameter)
 (enum_variant name: (identifier) @type.enum.variant)
 (constructor_pattern type: (path (identifier) @constructor))
+(struct_pattern type: (path (identifier) @type))
+(field_pattern name: (identifier) @variable.other.member)
+(rest_pattern) @operator
 (row_entry (path (identifier) @type.enum.variant))
 (struct_expression name: (type_path (path (identifier) @type)))
 

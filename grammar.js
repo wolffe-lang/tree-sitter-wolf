@@ -491,6 +491,7 @@ module.exports = grammar({
       $.identifier,
       $.tuple_pattern,
       $.constructor_pattern,
+      $.struct_pattern,
       $.at_pattern,
     ),
 
@@ -508,6 +509,26 @@ module.exports = grammar({
       '(',
       commaSep1($._pattern),
       ')',
+    ),
+
+    // [gram.pat.struct] (s129, #179): `Point { x, y: (a, b), .. }`.
+    // Shorthand `x` binds the field's value under the field's own name;
+    // a trailing `..` ignores every unnamed field. The production
+    // requires at least one field_pat — a pattern that would ignore
+    // every field is spelled `_` (the spec's word, not an omission).
+    struct_pattern: $ => seq(
+      field('type', $.path),
+      '{',
+      $.field_pattern,
+      repeat(seq(',', $.field_pattern)),
+      optional(','),
+      optional(alias('..', $.rest_pattern)),
+      '}',
+    ),
+
+    field_pattern: $ => seq(
+      field('name', $.identifier),
+      optional(seq(':', field('pattern', $._pattern))),
     ),
 
     at_pattern: $ => seq(
