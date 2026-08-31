@@ -260,20 +260,28 @@ module.exports = grammar({
 
     // ------------------------------- bindings & constants [gram.item.let]
 
+    // D63 comma groups: one keyword, several *complete* binders — each
+    // with its own pattern, optional ascription, and initializer
+    // (`var i = 0, c = 1`). Unambiguous by construction: every binder
+    // has its own `=`, and wolf has no unparenthesized tuple
+    // expressions, so a comma at statement depth begins the next binder.
     let_declaration: $ => seq(
       repeat($.attribute),
       optional($.visibility_modifier),
       'let',
-      field('pattern', $._pattern),
-      optional(seq(':', field('type', $._type))),
-      '=',
-      field('value', $._expression),
+      $.binder,
+      repeat(seq(',', $.binder)),
     ),
 
     var_declaration: $ => seq(
       repeat($.attribute),
       optional($.visibility_modifier),
       'var',
+      $.binder,
+      repeat(seq(',', $.binder)),
+    ),
+
+    binder: $ => seq(
       field('pattern', $._pattern),
       optional(seq(':', field('type', $._type))),
       '=',
@@ -483,6 +491,7 @@ module.exports = grammar({
       $.identifier,
       $.tuple_pattern,
       $.constructor_pattern,
+      $.struct_pattern,
       $.at_pattern,
     ),
 
@@ -500,6 +509,26 @@ module.exports = grammar({
       '(',
       commaSep1($._pattern),
       ')',
+    ),
+
+    // [gram.pat.struct] (s129, #179): `Point { x, y: (a, b), .. }`.
+    // Shorthand `x` binds the field's value under the field's own name;
+    // a trailing `..` ignores every unnamed field. The production
+    // requires at least one field_pat — a pattern that would ignore
+    // every field is spelled `_` (the spec's word, not an omission).
+    struct_pattern: $ => seq(
+      field('type', $.path),
+      '{',
+      $.field_pattern,
+      repeat(seq(',', $.field_pattern)),
+      optional(','),
+      optional(alias('..', $.rest_pattern)),
+      '}',
+    ),
+
+    field_pattern: $ => seq(
+      field('name', $.identifier),
+      optional(seq(':', field('pattern', $._pattern))),
     ),
 
     at_pattern: $ => seq(
@@ -910,6 +939,7 @@ module.exports = grammar({
     _literal: $ => choice(
       $.integer_literal,
       $.float_literal,
+      $.char_literal,
       $.string_literal,
       $.multiline_string_literal,
       $.raw_string_literal,
@@ -924,6 +954,22 @@ module.exports = grammar({
       /0x[0-9a-fA-F][0-9a-fA-F_]*/,
       /0o[0-7][0-7_]*/,
       /0b[01][01_]*/,
+    )),
+
+    // [gram.lex.char] (s121, D58) — one Unicode scalar between single
+    // quotes: `'a'`, `'🐺'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F43A}'`.
+    // The escape set is the string set plus `\'`; `\u{…}` takes hex
+    // digits (the spec says one to six; the token is permissive and the
+    // non-scalar refusals — surrogates, > 0x10FFFF, E0110 — are sema's).
+    char_literal: _ => token(seq(
+      "'",
+      choice(
+        /[^'\\\r\n]/,
+        /\\[ntr0\\'"]/,
+        /\\x[0-9a-fA-F]{2}/,
+        /\\u\{[0-9a-fA-F]+\}/,
+      ),
+      "'",
     )),
 
     // Digits on BOTH sides of the dot ([gram.lex.number]); `1.e5` is

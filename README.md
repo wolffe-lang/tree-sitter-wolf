@@ -13,8 +13,10 @@ What's here:
 
 - `grammar.js` — the full surface: items, expressions with the §3.2
   precedence climb, `[]` generics, regions, traits and `dyn`, closures,
-  `match` row patterns, postfix `?` and `!T` error rows, call-site
-  `f(mut x)`, and Go-adapted newline termination (`[gram.lex.newline]`).
+  `match` row patterns and struct patterns (`[gram.pat.struct]`), char
+  literals (`[gram.lex.char]`, D58), D63 binder comma groups, postfix
+  `?` and `!T` error rows, call-site `f(mut x)`, and Go-adapted newline
+  termination (`[gram.lex.newline]`).
 - `src/scanner.c` — external scanner for `"""` multiline strings (a lone
   `"` or `""` is content; the literal ends exactly at the next `"""`) and
   raw-string `#`-fences.

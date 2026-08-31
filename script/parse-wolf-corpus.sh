@@ -17,6 +17,12 @@ set -eu
 CORPUS="${1:?usage: parse-wolf-corpus.sh <wolf-lang-corpus-dir>}"
 TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 
+# The pass-count floor (le03): the gate must actually gate at least this
+# many files, so a shrinking checkout (sparse-checkout drift, a wrong
+# path) cannot go green by parsing nothing. Measured 443 at wolf-lang
+# 83f83bb; ratchets as the corpus grows, never down.
+FLOOR="${FLOOR:-443}"
+
 total=0
 skipped=0
 failed=0
@@ -27,6 +33,17 @@ trap 'rm -f "$fail_list"' EXIT
 for f in $(find "$CORPUS" -name '*.lu' | LC_ALL=C sort); do
   # Parse-tier counter-example? (directive scan, header only)
   if head -n 20 "$f" | grep -q 'check: fail(E0[012]'; then
+    skipped=$((skipped + 1))
+    continue
+  fi
+  # Member of a directory-module counter-example (D59): the program's
+  # directive lives in the module's entry.lu, and a deliberately
+  # unparseable *member* (corpus/resolve/broken_sibling/mangled.lu) is
+  # the very thing the entry's parse-tier `fail(...)` pins. Still by
+  # directive, never by construct — the directive is just one file over.
+  entry="$(dirname "$f")/entry.lu"
+  if [ -f "$entry" ] && [ "$f" != "$entry" ] \
+    && head -n 20 "$entry" | grep -q 'check: fail(E0[012]'; then
     skipped=$((skipped + 1))
     continue
   fi
@@ -46,4 +63,8 @@ if [ "$failed" -ne 0 ]; then
   cat "$fail_list"
   exit 1
 fi
-echo "PASS: zero ERROR nodes across the corpus"
+if [ "$total" -lt "$FLOOR" ]; then
+  echo "FAIL: only $total file(s) gated — the floor is $FLOOR; checkout suspect"
+  exit 1
+fi
+echo "PASS: zero ERROR nodes across the corpus ($total files, floor $FLOOR)"

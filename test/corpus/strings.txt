@@ -8,10 +8,11 @@ let s = "hello, {who}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (interpolation
-        (identifier)))))
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (identifier))))))
 
 ==================
 interpolation holds a real expression
@@ -23,16 +24,17 @@ let s = "{a.b(c)}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (interpolation
-        (call_expression
-          (field_expression
-            (identifier)
-            (identifier))
-          (arguments
-            (argument
-              (identifier))))))))
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (call_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (arguments
+              (argument
+                (identifier)))))))))
 
 ==================
 interpolation nests a string which interpolates again
@@ -44,12 +46,13 @@ let s = "{ "wrap-{inner}-wrap" }"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (interpolation
-        (string_literal
-          (interpolation
-            (identifier)))))))
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (string_literal
+            (interpolation
+              (identifier))))))))
 
 ==================
 brace escapes are literal
@@ -61,9 +64,10 @@ let s = "{{not interpolated}}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (brace_escape))))
+    (binder
+      (identifier)
+      (string_literal
+        (brace_escape)))))
 
 ==================
 escape sequences
@@ -75,14 +79,15 @@ let s = "a\nb\t\"\\\x7f\u{1F43A}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (escape_sequence)
-      (escape_sequence)
-      (escape_sequence)
-      (escape_sequence)
-      (escape_sequence)
-      (escape_sequence))))
+    (binder
+      (identifier)
+      (string_literal
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)))))
 
 ==================
 format spec after the first top-level colon
@@ -94,13 +99,14 @@ let s = "{m["k"]:>8}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (interpolation
-        (index_expression
-          (identifier)
-          (string_literal))
-        (format_spec)))))
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (index_expression
+            (identifier)
+            (string_literal))
+          (format_spec))))))
 
 ==================
 format spec width itself interpolated
@@ -112,13 +118,14 @@ let s = "{n:>{w}}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (string_literal
-      (interpolation
-        (identifier)
-        (format_spec
-          (interpolation
-            (identifier)))))))
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (identifier)
+          (format_spec
+            (interpolation
+              (identifier))))))))
 
 ==================
 triple-quoted string terminates at the next triple quote
@@ -133,9 +140,10 @@ let poem = """
 
 (source_file
   (let_declaration
-    (identifier)
-    (multiline_string_literal
-      (string_content))))
+    (binder
+      (identifier)
+      (multiline_string_literal
+        (string_content)))))
 
 ==================
 triple-quoted: lone and double quotes are content, not terminators
@@ -147,9 +155,10 @@ let s = """say "hi" and ""hi"" but not thrice"""
 
 (source_file
   (let_declaration
-    (identifier)
-    (multiline_string_literal
-      (string_content))))
+    (binder
+      (identifier)
+      (multiline_string_literal
+        (string_content)))))
 
 ==================
 triple-quoted string interpolates
@@ -163,12 +172,13 @@ let s = """
 
 (source_file
   (let_declaration
-    (identifier)
-    (multiline_string_literal
-      (string_content)
-      (interpolation
-        (identifier))
-      (string_content))))
+    (binder
+      (identifier)
+      (multiline_string_literal
+        (string_content)
+        (interpolation
+          (identifier))
+        (string_content)))))
 
 ==================
 raw string: no interpolation, no escapes
@@ -180,9 +190,10 @@ let s = r"no\nescape {not_interp}"
 
 (source_file
   (let_declaration
-    (identifier)
-    (raw_string_literal
-      (string_content))))
+    (binder
+      (identifier)
+      (raw_string_literal
+        (string_content)))))
 
 ==================
 raw string fences balance
@@ -195,13 +206,15 @@ let two = r##"fence #" inside"##
 
 (source_file
   (let_declaration
-    (identifier)
-    (raw_string_literal
-      (string_content)))
+    (binder
+      (identifier)
+      (raw_string_literal
+        (string_content))))
   (let_declaration
-    (identifier)
-    (raw_string_literal
-      (string_content))))
+    (binder
+      (identifier)
+      (raw_string_literal
+        (string_content)))))
 
 ==================
 generalized literal is a prefixed raw body
@@ -214,12 +227,14 @@ let cfg = path"/etc/hosts"
 
 (source_file
   (let_declaration
-    (identifier)
-    (generalized_string_literal
+    (binder
       (identifier)
-      (string_content)))
+      (generalized_string_literal
+        (identifier)
+        (string_content))))
   (let_declaration
-    (identifier)
-    (generalized_string_literal
+    (binder
       (identifier)
-      (string_content))))
+      (generalized_string_literal
+        (identifier)
+        (string_content)))))

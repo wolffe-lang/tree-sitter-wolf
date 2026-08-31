@@ -13,9 +13,10 @@ unsafe {
     (unsafe_expression
       (block
         (let_declaration
-          (identifier)
-          (unary_expression
-            (identifier)))))))
+          (binder
+            (identifier)
+            (unary_expression
+              (identifier))))))))
 
 ==================
 unsafe c with a capture list holds opaque C text
@@ -86,10 +87,11 @@ unsafe {
     (unsafe_expression
       (block
         (let_declaration
-          (identifier)
-          (borrow_expression
+          (binder
             (identifier)
-            (identifier)))
+            (borrow_expression
+              (identifier)
+              (identifier))))
         (assume_statement
           (identifier)
           (identifier))))))

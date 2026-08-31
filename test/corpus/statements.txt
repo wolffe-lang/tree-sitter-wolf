@@ -9,11 +9,13 @@ let c = d
 
 (source_file
   (let_declaration
-    (identifier)
-    (identifier))
+    (binder
+      (identifier)
+      (identifier)))
   (let_declaration
-    (identifier)
-    (identifier)))
+    (binder
+      (identifier)
+      (identifier))))
 
 ==================
 trailing operator continues the statement
@@ -26,10 +28,11 @@ let x = a +
 
 (source_file
   (let_declaration
-    (identifier)
-    (binary_expression
+    (binder
       (identifier)
-      (identifier))))
+      (binary_expression
+        (identifier)
+        (identifier)))))
 
 ==================
 trailing dot continues a method chain
@@ -43,18 +46,19 @@ let n = list.
 
 (source_file
   (let_declaration
-    (identifier)
-    (call_expression
-      (field_expression
-        (call_expression
-          (field_expression
-            (identifier)
-            (identifier))
-          (arguments
-            (argument
-              (identifier))))
-        (identifier))
-      (arguments))))
+    (binder
+      (identifier)
+      (call_expression
+        (field_expression
+          (call_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (arguments
+              (argument
+                (identifier))))
+          (identifier))
+        (arguments)))))
 
 ==================
 newlines never terminate inside parentheses
@@ -69,14 +73,15 @@ let v = f(
 
 (source_file
   (let_declaration
-    (identifier)
-    (call_expression
+    (binder
       (identifier)
-      (arguments
-        (argument
-          (identifier))
-        (argument
-          (identifier))))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (identifier))
+          (argument
+            (identifier)))))))
 
 ==================
 semicolons separate a single-line block
@@ -115,15 +120,17 @@ var (x, _) = pos
 
 (source_file
   (let_declaration
-    (tuple_pattern
-      (identifier)
-      (identifier))
-    (identifier))
+    (binder
+      (tuple_pattern
+        (identifier)
+        (identifier))
+      (identifier)))
   (var_declaration
-    (tuple_pattern
-      (identifier)
-      (wildcard_pattern))
-    (identifier)))
+    (binder
+      (tuple_pattern
+        (identifier)
+        (wildcard_pattern))
+      (identifier))))
 
 ==================
 compound assignment
@@ -179,8 +186,82 @@ var words: int = 0
 
 (source_file
   (var_declaration
-    (identifier)
-    (type_path
-      (path
-        (identifier)))
-    (integer_literal)))
+    (binder
+      (identifier)
+      (type_path
+        (path
+          (identifier)))
+      (integer_literal))))
+
+==================
+binder comma groups (D63)
+==================
+
+let a = 1, b = 2
+var i = 0, c = f(i)
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (integer_literal))
+    (binder
+      (identifier)
+      (integer_literal)))
+  (var_declaration
+    (binder
+      (identifier)
+      (integer_literal))
+    (binder
+      (identifier)
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (identifier)))))))
+
+==================
+binder group with ascriptions and destructuring
+==================
+
+let a: int = 1, (x, y) = pair()
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (type_path
+        (path
+          (identifier)))
+      (integer_literal))
+    (binder
+      (tuple_pattern
+        (identifier)
+        (identifier))
+      (call_expression
+        (identifier)
+        (arguments)))))
+
+==================
+binder group breaks after the comma
+==================
+
+var lo = 0,
+    hi = n - 1
+
+---
+
+(source_file
+  (var_declaration
+    (binder
+      (identifier)
+      (integer_literal))
+    (binder
+      (identifier)
+      (binary_expression
+        (identifier)
+        (integer_literal)))))

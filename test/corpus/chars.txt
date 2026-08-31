@@ -1,0 +1,170 @@
+==================
+char literals terminate their line
+==================
+
+let c = 'a'
+let w = '🐺'
+let e = 'é'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal))))
+
+==================
+char escapes are the string set plus quote
+==================
+
+let nl = '\n'
+let tab = '\t'
+let cr = '\r'
+let nul = '\0'
+let bs = '\\'
+let q = '\''
+let dq = '\"'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal))))
+
+==================
+hex and unicode char spellings including unprintables
+==================
+
+let hex = '\x41'
+let bell = '\u{7}'
+let wolf = '\u{1F43A}'
+let max = '\u{10FFFF}'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal))))
+
+==================
+char literals are patterns
+==================
+
+fn class(c: char) -> int {
+    match c {
+        'a' => 1
+        '\n' => 2
+        '\u{0}' => 3
+        _ => 0
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_body
+            (match_arm
+              (char_literal)
+              (integer_literal))
+            (match_arm
+              (char_literal)
+              (integer_literal))
+            (match_arm
+              (char_literal)
+              (integer_literal))
+            (match_arm
+              (wildcard_pattern)
+              (integer_literal))))))))
+
+==================
+char literals interpolate and compare
+==================
+
+let msg = "got {c} not {'q'}"
+let hit = c == 'x' && c != '\t'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (identifier))
+        (interpolation
+          (char_literal)))))
+  (let_declaration
+    (binder
+      (identifier)
+      (binary_expression
+        (binary_expression
+          (identifier)
+          (char_literal))
+        (binary_expression
+          (identifier)
+          (char_literal))))))
