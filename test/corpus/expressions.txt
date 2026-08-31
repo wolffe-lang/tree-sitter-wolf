@@ -8,16 +8,17 @@ let x = a + b * c << d == e
 
 (source_file
   (let_declaration
-    (identifier)
-    (binary_expression
+    (binder
+      (identifier)
       (binary_expression
         (binary_expression
-          (identifier)
           (binary_expression
             (identifier)
-            (identifier)))
-        (identifier))
-      (identifier))))
+            (binary_expression
+              (identifier)
+              (identifier)))
+          (identifier))
+        (identifier)))))
 
 ==================
 comparison does not chain into logic
@@ -29,14 +30,15 @@ let ok = a < b && c >= d
 
 (source_file
   (let_declaration
-    (identifier)
-    (binary_expression
+    (binder
+      (identifier)
       (binary_expression
-        (identifier)
-        (identifier))
-      (binary_expression
-        (identifier)
-        (identifier)))))
+        (binary_expression
+          (identifier)
+          (identifier))
+        (binary_expression
+          (identifier)
+          (identifier))))))
 
 ==================
 unary operators and casts
@@ -52,29 +54,34 @@ let e = &mut y
 
 (source_file
   (let_declaration
-    (identifier)
-    (unary_expression
-      (identifier)))
-  (let_declaration
-    (identifier)
-    (cast_expression
+    (binder
+      (identifier)
       (unary_expression
-        (identifier))
-      (type_path
-        (path
-          (identifier)))))
+        (identifier))))
   (let_declaration
-    (identifier)
-    (unary_expression
-      (identifier)))
+    (binder
+      (identifier)
+      (cast_expression
+        (unary_expression
+          (identifier))
+        (type_path
+          (path
+            (identifier))))))
   (let_declaration
-    (identifier)
-    (reference_expression
-      (identifier)))
+    (binder
+      (identifier)
+      (unary_expression
+        (identifier))))
   (let_declaration
-    (identifier)
-    (reference_expression
-      (identifier))))
+    (binder
+      (identifier)
+      (reference_expression
+        (identifier))))
+  (let_declaration
+    (binder
+      (identifier)
+      (reference_expression
+        (identifier)))))
 
 ==================
 value verbs are prefix operators
@@ -98,25 +105,28 @@ let c = freeze r
           (unary_expression
             (identifier))))))
   (let_declaration
-    (identifier)
-    (unary_expression
-      (parenthesized_expression
-        (struct_expression
-          (type_path
-            (path
-              (identifier)))
-          (field_initializer_list
-            (field_initializer
-              (identifier)
-              (integer_literal)))))))
+    (binder
+      (identifier)
+      (unary_expression
+        (parenthesized_expression
+          (struct_expression
+            (type_path
+              (path
+                (identifier)))
+            (field_initializer_list
+              (field_initializer
+                (identifier)
+                (integer_literal))))))))
   (let_declaration
-    (identifier)
-    (unary_expression
-      (identifier)))
+    (binder
+      (identifier)
+      (unary_expression
+        (identifier))))
   (let_declaration
-    (identifier)
-    (unary_expression
-      (identifier))))
+    (binder
+      (identifier)
+      (unary_expression
+        (identifier)))))
 
 ==================
 postfix question mark propagates
@@ -129,27 +139,29 @@ let n = parse(text)?.count()
 
 (source_file
   (let_declaration
-    (identifier)
-    (try_expression
+    (binder
+      (identifier)
+      (try_expression
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (identifier)))))))
+  (let_declaration
+    (binder
+      (identifier)
       (call_expression
         (field_expression
-          (identifier)
+          (try_expression
+            (call_expression
+              (identifier)
+              (arguments
+                (argument
+                  (identifier)))))
           (identifier))
-        (arguments
-          (argument
-            (identifier))))))
-  (let_declaration
-    (identifier)
-    (call_expression
-      (field_expression
-        (try_expression
-          (call_expression
-            (identifier)
-            (arguments
-              (argument
-                (identifier)))))
-        (identifier))
-      (arguments))))
+        (arguments)))))
 
 ==================
 call-site argument modes
@@ -224,32 +236,36 @@ let h = List[handle Node]()
 
 (source_file
   (let_declaration
-    (identifier)
-    (index_expression
+    (binder
       (identifier)
-      (identifier)))
-  (let_declaration
-    (identifier)
-    (call_expression
       (index_expression
         (identifier)
-        (identifier))
-      (arguments)))
+        (identifier))))
   (let_declaration
-    (identifier)
-    (index_expression
+    (binder
       (identifier)
-      (region_type)))
+      (call_expression
+        (index_expression
+          (identifier)
+          (identifier))
+        (arguments))))
   (let_declaration
-    (identifier)
-    (call_expression
+    (binder
+      (identifier)
       (index_expression
         (identifier)
-        (prefixed_type
-          (type_path
-            (path
-              (identifier)))))
-      (arguments))))
+        (region_type))))
+  (let_declaration
+    (binder
+      (identifier)
+      (call_expression
+        (index_expression
+          (identifier)
+          (prefixed_type
+            (type_path
+              (path
+                (identifier)))))
+        (arguments)))))
 
 ==================
 ranges and from-end endpoints
@@ -265,38 +281,43 @@ let e = s[^1]
 
 (source_file
   (let_declaration
-    (identifier)
-    (index_expression
+    (binder
+      (identifier)
+      (index_expression
+        (identifier)
+        (range_expression
+          (integer_literal)
+          (integer_literal)))))
+  (let_declaration
+    (binder
+      (identifier)
+      (index_expression
+        (identifier)
+        (range_expression
+          (from_end_expression
+            (integer_literal))))))
+  (let_declaration
+    (binder
+      (identifier)
+      (index_expression
+        (identifier)
+        (range_expression
+          (from_end_expression
+            (integer_literal))))))
+  (let_declaration
+    (binder
       (identifier)
       (range_expression
-        (integer_literal)
         (integer_literal))))
-  (let_declaration
-    (identifier)
-    (index_expression
-      (identifier)
-      (range_expression
-        (from_end_expression
-          (integer_literal)))))
-  (let_declaration
-    (identifier)
-    (index_expression
-      (identifier)
-      (range_expression
-        (from_end_expression
-          (integer_literal)))))
-  (let_declaration
-    (identifier)
-    (range_expression
-      (integer_literal)))
   (expression_statement
     (identifier))
   (let_declaration
-    (identifier)
-    (index_expression
+    (binder
       (identifier)
-      (from_end_expression
-        (integer_literal)))))
+      (index_expression
+        (identifier)
+        (from_end_expression
+          (integer_literal))))))
 
 ==================
 member access on an integer literal
@@ -309,13 +330,15 @@ let f = 1.0e5
 
 (source_file
   (let_declaration
-    (identifier)
-    (field_expression
-      (integer_literal)
-      (identifier)))
+    (binder
+      (identifier)
+      (field_expression
+        (integer_literal)
+        (identifier))))
   (let_declaration
-    (identifier)
-    (float_literal)))
+    (binder
+      (identifier)
+      (float_literal))))
 
 ==================
 tuple access by index
@@ -328,17 +351,19 @@ let y = triple.1.0
 
 (source_file
   (let_declaration
-    (identifier)
-    (field_expression
+    (binder
       (identifier)
-      (integer_literal)))
-  (let_declaration
-    (identifier)
-    (field_expression
       (field_expression
         (identifier)
-        (integer_literal))
-      (integer_literal))))
+        (integer_literal))))
+  (let_declaration
+    (binder
+      (identifier)
+      (field_expression
+        (field_expression
+          (identifier)
+          (integer_literal))
+        (integer_literal)))))
 
 ==================
 else defaulting and the error handler form
@@ -352,48 +377,51 @@ let v = risky() else |e| { log(e); 0 }
 
 (source_file
   (let_declaration
-    (identifier)
-    (else_expression
-      (call_expression
-        (field_expression
-          (identifier)
-          (identifier))
-        (arguments
-          (argument
-            (string_literal))))
-      (integer_literal)))
+    (binder
+      (identifier)
+      (else_expression
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (string_literal))))
+        (integer_literal))))
   (let_declaration
-    (identifier)
-    (else_expression
-      (call_expression
-        (field_expression
-          (identifier)
-          (identifier))
-        (arguments
-          (argument
-            (range_expression
-              (integer_literal)
-              (integer_literal)))))
-      (else_handler
-        (wildcard_pattern)
-        (string_literal))))
+    (binder
+      (identifier)
+      (else_expression
+        (call_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (arguments
+            (argument
+              (range_expression
+                (integer_literal)
+                (integer_literal)))))
+        (else_handler
+          (wildcard_pattern)
+          (string_literal)))))
   (let_declaration
-    (identifier)
-    (else_expression
-      (call_expression
-        (identifier)
-        (arguments))
-      (else_handler
-        (identifier)
-        (block
-          (expression_statement
-            (call_expression
-              (identifier)
-              (arguments
-                (argument
-                  (identifier)))))
-          (expression_statement
-            (integer_literal)))))))
+    (binder
+      (identifier)
+      (else_expression
+        (call_expression
+          (identifier)
+          (arguments))
+        (else_handler
+          (identifier)
+          (block
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (identifier)))))
+            (expression_statement
+              (integer_literal))))))))
 
 ==================
 closure with expression body extends maximally
@@ -405,26 +433,27 @@ let top = xs.sorted_by(fn(a, b) b.1 <=> a.1)
 
 (source_file
   (let_declaration
-    (identifier)
-    (call_expression
-      (field_expression
-        (identifier)
-        (identifier))
-      (arguments
-        (argument
-          (closure_expression
-            (closure_parameters
-              (closure_parameter
-                (identifier))
-              (closure_parameter
-                (identifier)))
-            (binary_expression
-              (field_expression
-                (identifier)
-                (integer_literal))
-              (field_expression
-                (identifier)
-                (integer_literal)))))))))
+    (binder
+      (identifier)
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments
+          (argument
+            (closure_expression
+              (closure_parameters
+                (closure_parameter
+                  (identifier))
+                (closure_parameter
+                  (identifier)))
+              (binary_expression
+                (field_expression
+                  (identifier)
+                  (integer_literal))
+                (field_expression
+                  (identifier)
+                  (integer_literal))))))))))
 
 ==================
 closure as a non-final argument stops at the comma
@@ -436,26 +465,27 @@ let mixed = zip(xs, fn(p) p.0 + p.1, 100)
 
 (source_file
   (let_declaration
-    (identifier)
-    (call_expression
+    (binder
       (identifier)
-      (arguments
-        (argument
-          (identifier))
-        (argument
-          (closure_expression
-            (closure_parameters
-              (closure_parameter
-                (identifier)))
-            (binary_expression
-              (field_expression
-                (identifier)
-                (integer_literal))
-              (field_expression
-                (identifier)
-                (integer_literal)))))
-        (argument
-          (integer_literal))))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (identifier))
+          (argument
+            (closure_expression
+              (closure_parameters
+                (closure_parameter
+                  (identifier)))
+              (binary_expression
+                (field_expression
+                  (identifier)
+                  (integer_literal))
+                (field_expression
+                  (identifier)
+                  (integer_literal)))))
+          (argument
+            (integer_literal)))))))
 
 ==================
 block-bodied closure
@@ -493,17 +523,18 @@ let p = Point { x: 1, y }
 
 (source_file
   (let_declaration
-    (identifier)
-    (struct_expression
-      (type_path
-        (path
-          (identifier)))
-      (field_initializer_list
-        (field_initializer
-          (identifier)
-          (integer_literal))
-        (shorthand_field_initializer
-          (identifier))))))
+    (binder
+      (identifier)
+      (struct_expression
+        (type_path
+          (path
+            (identifier)))
+        (field_initializer_list
+          (field_initializer
+            (identifier)
+            (integer_literal))
+          (shorthand_field_initializer
+            (identifier)))))))
 
 ==================
 struct literal parenthesized in a condition
@@ -545,19 +576,22 @@ let grouped = (a + b) * c
 
 (source_file
   (let_declaration
-    (identifier)
-    (tuple_expression
-      (integer_literal)
-      (string_literal)))
+    (binder
+      (identifier)
+      (tuple_expression
+        (integer_literal)
+        (string_literal))))
   (let_declaration
-    (identifier)
-    (tuple_expression
-      (identifier)))
+    (binder
+      (identifier)
+      (tuple_expression
+        (identifier))))
   (let_declaration
-    (identifier)
-    (binary_expression
-      (parenthesized_expression
-        (binary_expression
-          (identifier)
-          (identifier)))
-      (identifier))))
+    (binder
+      (identifier)
+      (binary_expression
+        (parenthesized_expression
+          (binary_expression
+            (identifier)
+            (identifier)))
+        (identifier)))))

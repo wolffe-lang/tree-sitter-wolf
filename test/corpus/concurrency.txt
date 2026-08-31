@@ -39,15 +39,16 @@ w.monitor()
 
 (source_file
   (let_declaration
-    (identifier)
-    (spawn_expression
-      (path
-        (identifier))
-      (arguments
-        (argument
+    (binder
+      (identifier)
+      (spawn_expression
+        (path
           (identifier))
-        (argument
-          (integer_literal)))))
+        (arguments
+          (argument
+            (identifier))
+          (argument
+            (integer_literal))))))
   (expression_statement
     (call_expression
       (field_expression
@@ -150,6 +151,7 @@ let f = freeze big
           (unary_expression
             (identifier))))))
   (let_declaration
-    (identifier)
-    (unary_expression
-      (identifier))))
+    (binder
+      (identifier)
+      (unary_expression
+        (identifier)))))

@@ -8,14 +8,8 @@ let grade = if s > 90 { "a" } else if s > 80 { "b" } else { "c" }
 
 (source_file
   (let_declaration
-    (identifier)
-    (if_expression
-      (binary_expression
-        (identifier)
-        (integer_literal))
-      (block
-        (expression_statement
-          (string_literal)))
+    (binder
+      (identifier)
       (if_expression
         (binary_expression
           (identifier)
@@ -23,9 +17,16 @@ let grade = if s > 90 { "a" } else if s > 80 { "b" } else { "c" }
         (block
           (expression_statement
             (string_literal)))
-        (block
-          (expression_statement
-            (string_literal)))))))
+        (if_expression
+          (binary_expression
+            (identifier)
+            (integer_literal))
+          (block
+            (expression_statement
+              (string_literal)))
+          (block
+            (expression_statement
+              (string_literal))))))))
 
 ==================
 match with payload patterns, guards, and or-patterns

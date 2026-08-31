@@ -260,20 +260,28 @@ module.exports = grammar({
 
     // ------------------------------- bindings & constants [gram.item.let]
 
+    // D63 comma groups: one keyword, several *complete* binders — each
+    // with its own pattern, optional ascription, and initializer
+    // (`var i = 0, c = 1`). Unambiguous by construction: every binder
+    // has its own `=`, and wolf has no unparenthesized tuple
+    // expressions, so a comma at statement depth begins the next binder.
     let_declaration: $ => seq(
       repeat($.attribute),
       optional($.visibility_modifier),
       'let',
-      field('pattern', $._pattern),
-      optional(seq(':', field('type', $._type))),
-      '=',
-      field('value', $._expression),
+      $.binder,
+      repeat(seq(',', $.binder)),
     ),
 
     var_declaration: $ => seq(
       repeat($.attribute),
       optional($.visibility_modifier),
       'var',
+      $.binder,
+      repeat(seq(',', $.binder)),
+    ),
+
+    binder: $ => seq(
       field('pattern', $._pattern),
       optional(seq(':', field('type', $._type))),
       '=',

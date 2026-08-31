@@ -91,20 +91,21 @@ let v: str ! {Missing} = lookup(k)
       (expression_statement
         (integer_literal))))
   (let_declaration
-    (identifier)
-    (rowed_type
-      (type_path
-        (path
-          (identifier)))
-      (error_row
-        (row_entry
-          (path
-            (identifier)))))
-    (call_expression
+    (binder
       (identifier)
-      (arguments
-        (argument
-          (identifier))))))
+      (rowed_type
+        (type_path
+          (path
+            (identifier)))
+        (error_row
+          (row_entry
+            (path
+              (identifier)))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (identifier)))))))
 
 ==================
 open rows
@@ -143,43 +144,46 @@ let p: weak Parent = child.up()
 
 (source_file
   (let_declaration
-    (identifier)
-    (prefixed_type
-      (type_path
-        (path
-          (identifier))))
-    (call_expression
-      (field_expression
-        (identifier)
-        (identifier))
-      (arguments)))
+    (binder
+      (identifier)
+      (prefixed_type
+        (type_path
+          (path
+            (identifier))))
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments))))
   (let_declaration
-    (identifier)
-    (prefixed_type
-      (type_path
-        (path
-          (identifier))))
-    (unary_expression
-      (parenthesized_expression
-        (struct_expression
-          (type_path
-            (path
-              (identifier)))
-          (field_initializer_list
-            (field_initializer
-              (identifier)
-              (integer_literal)))))))
+    (binder
+      (identifier)
+      (prefixed_type
+        (type_path
+          (path
+            (identifier))))
+      (unary_expression
+        (parenthesized_expression
+          (struct_expression
+            (type_path
+              (path
+                (identifier)))
+            (field_initializer_list
+              (field_initializer
+                (identifier)
+                (integer_literal))))))))
   (let_declaration
-    (identifier)
-    (prefixed_type
-      (type_path
-        (path
-          (identifier))))
-    (call_expression
-      (field_expression
-        (identifier)
-        (identifier))
-      (arguments))))
+    (binder
+      (identifier)
+      (prefixed_type
+        (type_path
+          (path
+            (identifier))))
+      (call_expression
+        (field_expression
+          (identifier)
+          (identifier))
+        (arguments)))))
 
 ==================
 dyn trait type
@@ -219,30 +223,32 @@ let pair: (int, str) = (1, "x")
 
 (source_file
   (let_declaration
-    (identifier)
-    (function_type
-      (type_path
-        (path
-          (identifier)))
-      (type_path
-        (path
-          (identifier)))
-      (type_path
-        (path
-          (identifier))))
-    (identifier))
+    (binder
+      (identifier)
+      (function_type
+        (type_path
+          (path
+            (identifier)))
+        (type_path
+          (path
+            (identifier)))
+        (type_path
+          (path
+            (identifier))))
+      (identifier)))
   (let_declaration
-    (identifier)
-    (tuple_type
-      (type_path
-        (path
-          (identifier)))
-      (type_path
-        (path
-          (identifier))))
-    (tuple_expression
-      (integer_literal)
-      (string_literal))))
+    (binder
+      (identifier)
+      (tuple_type
+        (type_path
+          (path
+            (identifier)))
+        (type_path
+          (path
+            (identifier))))
+      (tuple_expression
+        (integer_literal)
+        (string_literal)))))
 
 ==================
 raw pointer type in the unsafe tier
