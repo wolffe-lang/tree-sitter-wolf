@@ -168,3 +168,74 @@ let hit = c == 'x' && c != '\t'
         (binary_expression
           (identifier)
           (char_literal))))))
+
+==================
+the \u{…} escape takes one to six hex digits
+==================
+
+let one = '\u{4}'
+let two = '\u{41}'
+let four = '\u{1F43A}'
+let six = '\u{000041}'
+let max = '\u{10FFFF}'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal))))
+
+==================
+seven hex digits is not a char literal (the E0101 refusal shape)
+==================
+
+let seven = '\u{0000041}'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (ERROR
+        (UNEXPECTED '1'))
+      (integer_literal)))
+  (ERROR
+    (UNEXPECTED '\n')))
+
+==================
+the digit bound is the escape's shape, not the char's value
+==================
+
+let a = '\u{41}'
+let same = '\u{000041}'
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (char_literal))))
