@@ -54,8 +54,11 @@ the editors take it at their next pin (le05-era), so until then
 `Point { x .. }` still parses here and will start refusing under a
 future `wolfc`. The exposure is exactly that one spelling — `struct_pattern`'s
 `optional(',')` before `rest_pattern`; `Point { x y z }` and `(a b)`,
-the other wolfgang laxities D67 names, already ERROR here. wolf-lang#190
-stays open as D67's tracker.
+the other wolfgang laxities D67 names, already ERROR here. D67 names
+wolf-lang#190 as its tracker, but that issue is CLOSED (`COMPLETED`,
+2026-09-01, seconds after the v0.2.1 release draft — a merge message, most
+likely, not intent), so the tracker D67 points at is not open. Flagged on
+the issue, not reopened.
 
 ## le03 — 2026-08-31 — the grammar catches up
 

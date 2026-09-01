@@ -17,18 +17,20 @@ the escape's SHAPE, not the value it names — leading zeros count, so
 asks what it spells. `grammar.js` follows in the char literal; see
 finding 1 for the half it cannot follow.
 
-**wolf-lang#190 — still OPEN.** The comma before `..` in a struct
-pattern. r04's probe found the machines disagree (wolfgang accepts the
+**wolf-lang#190 — ruled, and its tracker is CLOSED.** The comma before `..`
+in a struct pattern. r04's probe found the machines disagree (wolfgang accepts the
 comma-less spellings, lupin refuses per the production's letter), and
 the spec sentence was backed out of the patch release rather than
 shipped ahead of the fix. **D67** has since ruled: the production is the
 law, separators are required, and `..` follows a separator like one more
 member. tree-sitter-wolf is deliberately NOT acted on here at le04 —
-see the CHANGELOG's known-gaps line.
+see the CHANGELOG's known-gaps line. Note that D67 names #190 as the
+tracker for the wolfgang tightening while the issue is CLOSED
+(`COMPLETED`, 2026-09-01); flagged on the issue rather than reopened.
 
 ## 1. `UNI_ESC` is named but only wired into `CHAR_ESC`
 
-Not yet filed — reported with this sprint.
+Filed: wolf-lang#198.
 
 v0.2.1's prose makes a new, explicit cross-reference claim: the
 one-to-six bound "is the production's, and it **binds in string
@@ -99,3 +101,19 @@ drops, and names the loop-body case. Purely semantic: `defer` and
 `errdefer` are already tokens here and their syntax is untouched.
 Recorded so the diff is accounted for line by line, not because
 anything follows.
+
+## 4. Two findings outside the grammar, filed from the wolf-lsp half
+
+Recorded here so this sprint's upstream reports are in one place.
+
+- **wolf-lang#199** — D57's version string is clone-dependent.
+  `xtask`'s `git_short_sha()` runs `git rev-parse --short` with git's
+  AUTO abbreviation, which just grew from seven to eight characters in
+  a full clone, so `wolf --version` at `v0.2.1` prints
+  `pin 75fd2d0b` where the same commit in a smaller clone would print
+  `pin 75fd2d0`. wolf-lsp's PIN records the string verbatim and
+  `doctor` refuses any mismatch, so the width is load-bearing.
+- **wolf-lang#200** — the `v0.2.0` and `v0.2.1` GitHub releases are
+  DRAFTS with tier-1 assets uploaded. Only `v0.1.0` is published, so
+  every downstream "acquire the pinned artifact" lane is still dark —
+  now because the asset is unpublished rather than absent.
