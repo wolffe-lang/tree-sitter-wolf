@@ -1,5 +1,65 @@
 # Changelog
 
+## le04 — 2026-09-01 — the escape gets a bound
+
+A small catch-up: wolf-lang **v0.2.1**'s grammar deltas reach the
+grammar. The spec diff `83f83bb..v0.2.1` is three files and one
+substantive change — r04 closed le03's own finding (wolf-lang#189) at
+the measured letter, so `CHAR_ESC`'s `HEX_DIGIT+` is gone and a named
+`UNI_ESC` bounds the `\u{…}` escape at **one to six** hex digits. The
+bound is on the escape's SHAPE, not the value it names: leading zeros
+count, so `'\u{000041}'` is `'A'` and `'\u{0000041}'` is E0101 before
+anything asks what it spells.
+
+`char_literal` takes the bound. A tree-sitter grammar has no refusal,
+but here it has the next best thing: nothing else starts with `'`, so
+seven digits leave an ERROR node exactly where wolfc reports, and
+`test/corpus/chars.txt` pins that shape alongside the in-bounds
+one-through-six sweep. (The zero-digit half, `'\u{}'`, was already
+outside the token.)
+
+The string half is **honestly noted, not encoded**. v0.2.1's prose says
+the bound binds inside `"…"` too, and measured at le04, bounding the
+`escape_sequence` token there produces no ERROR: its last alternative is
+a `.` catch-all, so `"\u{0000041}"` would lex as `\u` and then re-enter
+interpolation mode on `{0000041}`, growing a plausible-looking
+`(interpolation (integer_literal))` where an escape stood. Changing the
+tree's SHAPE is a worse lie than a permissive token — `locals.scm` and
+`injections.scm` read shape — so the digit count stays unbounded inside
+a string and `test/corpus/strings.txt` records what the grammar actually
+does. Encoding it honestly wants a distinct `invalid_escape` node
+painted `@error`, which is a new public node and a downstream change in
+wolf-lsp: **flagged, not taken.**
+
+The wolf-lang trunk-corpus gate re-measured at v0.2.1 (trunk `e6548a9`;
+the corpus grew to 467 `.lu` files): **454 files gated**, 13 parse-tier
+counter-examples excluded by directive, zero ERROR nodes. The pass-count
+floor ratchets **443 → 454**. The one over-long escape in the whole
+corpus lives in `corpus/grammar/char_uni_seven_digits.lu`, which is a
+`check: fail(E0101)` counter-example and therefore excluded — the bound
+costs the gate nothing.
+
+Two findings in `docs/spec-findings-le04.md`: `UNI_ESC` is named but
+wired only into `CHAR_ESC`, so `STR_PART` still derives no escapes at
+all while the prose asserts the bound binds there (suggested fix: a
+`STR_ESC` alternative); and the recorded limit above, so the next reader
+does not "fix" the string half. `[mem.model.order]`'s D66 amendment —
+the third file in the diff — is purely semantic and needs nothing here.
+
+**Known gaps:** **D67** (ruled 2026-09-01) makes pattern separators
+required — `','` separates fields and `'..'` follows a separator like
+one more member — and wolf-lang's s131 lands the wolfgang tightening on
+trunk **this wave**. This grammar is deliberately NOT changed for it:
+the editors take it at their next pin (le05-era), so until then
+`Point { x .. }` still parses here and will start refusing under a
+future `wolfc`. The exposure is exactly that one spelling — `struct_pattern`'s
+`optional(',')` before `rest_pattern`; `Point { x y z }` and `(a b)`,
+the other wolfgang laxities D67 names, already ERROR here. D67 names
+wolf-lang#190 as its tracker, but that issue is CLOSED (`COMPLETED`,
+2026-09-01, seconds after the v0.2.1 release draft — a merge message, most
+likely, not intent), so the tracker D67 points at is not open. Flagged on
+the issue, not reopened.
+
 ## le03 — 2026-08-31 — the grammar catches up
 
 The le02 known-gaps line closes: re-read at wolf-lang `83f83bb`

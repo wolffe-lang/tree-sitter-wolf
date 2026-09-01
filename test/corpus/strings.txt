@@ -238,3 +238,24 @@ let cfg = path"/etc/hosts"
       (generalized_string_literal
         (identifier)
         (string_content)))))
+
+==================
+the \u{…} digit bound is NOT encoded inside a string (grammar cannot refuse)
+==================
+
+let ok = "six \u{000041}"
+let over = "seven \u{0000041}"
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (escape_sequence))))
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (escape_sequence)))))

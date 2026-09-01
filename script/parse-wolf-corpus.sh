@@ -19,9 +19,11 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 
 # The pass-count floor (le03): the gate must actually gate at least this
 # many files, so a shrinking checkout (sparse-checkout drift, a wrong
-# path) cannot go green by parsing nothing. Measured 443 at wolf-lang
-# 83f83bb; ratchets as the corpus grows, never down.
-FLOOR="${FLOOR:-443}"
+# path) cannot go green by parsing nothing. Ratchets as the corpus grows,
+# never down. Measured 443 at wolf-lang 83f83bb (le03); re-measured 454
+# at v0.2.1 / trunk e6548a9 (le04) — 467 `.lu` files, 13 parse-tier
+# counter-examples excluded by directive.
+FLOOR="${FLOOR:-454}"
 
 total=0
 skipped=0

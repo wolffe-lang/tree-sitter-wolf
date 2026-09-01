@@ -958,16 +958,29 @@ module.exports = grammar({
 
     // [gram.lex.char] (s121, D58) — one Unicode scalar between single
     // quotes: `'a'`, `'🐺'`, `'\n'`, `'\''`, `'\x41'`, `'\u{1F43A}'`.
-    // The escape set is the string set plus `\'`; `\u{…}` takes hex
-    // digits (the spec says one to six; the token is permissive and the
-    // non-scalar refusals — surrogates, > 0x10FFFF, E0110 — are sema's).
+    // The escape set is the string set plus `\'`.
+    //
+    // `\u{…}` takes ONE TO SIX hex digits — wolf-lang r04 settled the
+    // le03 finding (#189) at v0.2.1: the prose was the letter and the
+    // production amended to `UNI_ESC`, so `HEX_DIGIT+` is gone. The
+    // bound is on the escape's SHAPE, not on the value it names —
+    // leading zeros count, so `'\u{000041}'` is `'A'` and
+    // `'\u{0000041}'` is refused before anything asks what it names
+    // (E0101). A tree-sitter grammar has no refusal, but here it has
+    // the next best thing: no other token starts with `'`, so an
+    // out-of-bounds digit count leaves an ERROR node exactly where
+    // wolfc reports — see test/corpus/chars.txt. The zero-digit half
+    // (`'\u{}'`) was already outside the token and already ERRORs.
+    //
+    // Still sema's, not the grammar's: the non-scalar refusals —
+    // surrogates, > 0x10FFFF, E0110.
     char_literal: _ => token(seq(
       "'",
       choice(
         /[^'\\\r\n]/,
         /\\[ntr0\\'"]/,
         /\\x[0-9a-fA-F]{2}/,
-        /\\u\{[0-9a-fA-F]+\}/,
+        /\\u\{[0-9a-fA-F]{1,6}\}/,
       ),
       "'",
     )),
@@ -997,6 +1010,26 @@ module.exports = grammar({
     // `{{` and `}}` are literal braces [gram.lex.str.escape].
     brace_escape: _ => token.immediate(prec(2, /\{\{|\}\}/)),
 
+    // v0.2.1's `UNI_ESC` bound binds in string literals too — the prose
+    // says so outright ("it binds in string literals too
+    // `[gram.lex.str.escape]`"). It is NOT encoded here, on purpose,
+    // and this is the "where it cannot" half of the le04 reading.
+    //
+    // The token's last alternative is a `.` catch-all (the escape SET
+    // is deliberately permissive here — `\q` is sema's E0101, not the
+    // grammar's). Bounding the `u{…}` branch to `{1,6}` therefore does
+    // not produce an ERROR the way the char literal does: `"\u{0000041}"`
+    // lexes as `\u` via the catch-all and then `{0000041}` re-enters
+    // interpolation mode, so the tree gains a plausible-looking
+    // `(interpolation (integer_literal))` where an escape stood. That is
+    // a worse lie than the permissive token — it changes the tree's
+    // SHAPE, and locals/injections read that shape. Measured at le04.
+    //
+    // So the digit count stays unbounded inside `"…"` and the refusal
+    // stays wolfc's. Encoding it honestly here needs a distinct node
+    // (an `invalid_escape` painted `@error`), which is a new node in the
+    // public surface and a downstream change in wolf-lsp's queries and
+    // inventories — flagged, not taken, at le04.
     escape_sequence: _ => token.immediate(prec(2,
       /\\(x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)/,
     )),

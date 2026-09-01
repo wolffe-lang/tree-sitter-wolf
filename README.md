@@ -42,4 +42,13 @@ E0003; detached moded receivers, E0210; empty statements, E0002) still
 parse here. It is never narrower than the spec; a construct that will not
 parse is a bug or a filed spec-silence finding, not an exclusion.
 
+A tree-sitter grammar has no refusal, only an ERROR node, so a lexer-tier
+rule is encoded only where the token boundary happens to make it visible.
+`'\u{…}'` is the worked case: v0.2.1's `UNI_ESC` bounds the escape at one
+to six hex digits, and because nothing else starts with `'`, seven digits
+leave an ERROR exactly where wolfc reports E0101 — while the same bound
+inside `"…"` is left unencoded on purpose, because encoding it there
+silently reshapes the tree instead of marking it. `docs/spec-findings-le04.md`
+records both halves.
+
 Licensed under GPL-3.0-or-later.
