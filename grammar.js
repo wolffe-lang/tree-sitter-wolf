@@ -516,13 +516,21 @@ module.exports = grammar({
     // a trailing `..` ignores every unnamed field. The production
     // requires at least one field_pat — a pattern that would ignore
     // every field is spelled `_` (the spec's word, not an omission).
+    //
+    // D67 (v0.2.2): the separator is REQUIRED throughout the pattern
+    // family, and `..` follows a separator like one more member — the
+    // production's tail is exactly `(',' '..'?)?`, so `Point { x, .. }`
+    // parses, `Point { x, }` parses, and `Point { x .. }` does not.
+    // That last spelling was le04's known gap: wolfgang accepted it as
+    // an unlicensed recovery-loop accident, D67 ruled the production
+    // the law, and s131 landed the tightening. `Point { x y }` and
+    // `(a b)` — D67's other two named laxities — already ERRORed here.
     struct_pattern: $ => seq(
       field('type', $.path),
       '{',
       $.field_pattern,
       repeat(seq(',', $.field_pattern)),
-      optional(','),
-      optional(alias('..', $.rest_pattern)),
+      optional(seq(',', optional(alias('..', $.rest_pattern)))),
       '}',
     ),
 
