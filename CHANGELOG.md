@@ -1,5 +1,93 @@
 # Changelog
 
+## le05 — 2026-09-02 — the separator is the law
+
+wolf-lang **v0.2.2**'s grammar deltas reach the grammar, and le04's two
+open items close with them.
+
+**D67 — the pattern family.** `closed_pattern`'s struct arm writes its
+tail as `(',' '..'?)?`: `..` follows a separator like one more member.
+`Point { x, .. }` and `Point { x, }` parse; `Point { x .. }` does not.
+That last spelling was le04's whole known-gaps line — wolfgang accepted
+it as an unlicensed recovery-loop accident, D67 ruled the production the
+law, s131 landed the tightening, and the grammar follows at the pin.
+`Point { x y }`, `(a b)` and `Some(a b)` — D67's other named laxities —
+already ERRORed here; they get corpus cases now so the refusal shape is
+pinned rather than assumed.
+
+**D69 — literals, closures, captures.** Three of the four already held:
+`field_initializer_list`, `closure_parameters` and `capture_list` have
+demanded the separator since le02. The fourth had an escape hatch, and
+closing it is this entry's one structural change. `Point { x: 1 y: 2 }`
+ERRORed, but the shorthand-only `Point { x y }` did not: it cannot be a
+`struct_expression`, so GLR re-read `let p = Point { x y }` as
+`let p = Point` followed by a bare block statement `{ x y }` holding two
+unterminated expression statements — a clean tree exactly where wolfc
+reports E0201. So `block` now takes `[gram.lex.newline]` literally, which
+is the spec's own letter and not a special case: `block ::= '{' stmt*
+expr? '}'` with `expr_stmt ::= expr TERM` and `let_item ::= … TERM`, so a
+statement is terminated and the block's trailing expression is not. The
+rescue dies at its second statement and the ERROR lands on the missing
+separator. `source_file` needed nothing — the rescue always goes through
+a `block`. Measured against a 21-spelling battery of legal one-liners,
+tail expressions, `;`-separated bodies, nested items first/middle/last,
+`if`/`match`/`for` in both positions, bare block statements and
+interleaved comments: all still parse.
+
+**STR_ESC — and le04's flagged node, taken.** v0.2.2 closes le04's own
+finding (wolf-lang#198) with le04's suggested fix verbatim: `STR_PART`
+gains a `STR_ESC` alternative, and `CHAR_ESC ::= STR_ESC | '\' "'"`
+derives the char set from the string set instead of restating it. That
+makes the string escape set a *production* rather than a prose bullet —
+"and nothing else; any other `\` is E0101 at the escape" — which is what
+le04 was waiting for. So `escape_sequence` narrows to exactly `STR_ESC`,
+and everything it no longer derives lexes as a new **`invalid_escape`**
+node, painted `@error`. le04 measured why it has to be a node: bounding
+the old permissive token yielded no ERROR at all (its `.` catch-all made
+`"\u{0000041}"` lex as `\u`, after which `{0000041}` re-entered
+interpolation mode and grew a fake `(interpolation (integer_literal))`
+where an escape stood), and an ERROR node would throw away the rest of an
+otherwise fine literal while `locals.scm`/`injections.scm` read tree
+shape. `invalid_escape` keeps the shape — one escape token where one
+escape stands — and names the refusal: the over-long and zero-digit
+`\u{…}`, `\xH`, `\q`, and `\'`, which is a char literal's escape alone.
+`char_literal` needed no change; its token already carried exactly
+`STR_ESC` plus `\'`. **This is a new node in the public surface**, and
+wolf-lsp's inventory takes it at this same pin.
+
+**`region_cap` — a fourth delta, and the gate is what found it.** Not in
+this sprint's brief; the corpus gate refused to go green without it.
+v0.2.2 splits `region_expr`'s sugar in two and adds a creation-time byte
+budget (`region_cap ::= 'cap' ':' expr`, s132, `[mem.region.cap.1]`),
+making `cap` a third contextual keyword beside `rc` and `pool`. The split
+is load-bearing and the spec says why: on the sugar form the cap
+parenthesis follows the NAME, so an anonymous sugar block takes no cap,
+because `region (cap: n)` is already the value form. Three corpus files
+exercise it — `conc/proc_cap_fault_join.lu`, `faults/region_cap_breach.lu`,
+`memory/region_cap_boundary.lu` — and they were the entire ERROR set
+before the rule landed.
+
+**Gates.** The corpus suite grows 104 → 111 cases (the four D67/D69
+refusal shapes, the region-cap forms, and the string-escape set rewritten
+now that the bound binds inside `"…"` too). The wolf-lang trunk-corpus
+gate re-measured at v0.2.2 — the corpus is byte-identical at the tag and
+at trunk `4d9683d`, 482 `.lu` files: **463 files gated**, 19 parse-tier
+counter-examples excluded by directive, zero ERROR nodes. The pass-count
+floor ratchets **454 → 463**.
+
+One finding in `docs/spec-findings-le05.md`, filed as **wolf-lang#215**:
+`MULTILINE_STRING`, `RAW_STRING` and `STR_TEXT` are named in
+`spec/grammar.ebnf` and defined nowhere in it — the same class of gap
+#198 just closed, one literal over. It bit immediately: deciding whether
+`invalid_escape` belongs inside a `"""` literal had to be read off a
+contrast between three prose bullets, because `[gram.lex.str.raw]` and
+`[gram.lex.str.gen]` exclude escapes outright while `[gram.lex.str.multi]`
+says only that interpolation works. The silence is read as "escapes work"
+— the forms that exclude them say so — and `invalid_escape` joins
+`escape_sequence` there, as it has been since le02.
+
+**Known gaps:** none carried forward. le04's D67 line closes here.
+
 ## le04 — 2026-09-01 — the escape gets a bound
 
 A small catch-up: wolf-lang **v0.2.1**'s grammar deltas reach the

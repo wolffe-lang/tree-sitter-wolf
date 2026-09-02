@@ -118,3 +118,88 @@ for Point { x, .. } in ps {
                 (string_literal
                   (interpolation
                     (identifier)))))))))))
+
+==================
+D67: `..` follows a separator like one more member
+==================
+
+let Point { x, .. } = ok
+let Point { x .. } = bad
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      pattern: (struct_pattern
+        type: (path
+          (identifier))
+        (field_pattern
+          name: (identifier))
+        (rest_pattern))
+      value: (identifier)))
+  (let_declaration
+    (binder
+      pattern: (struct_pattern
+        type: (path
+          (identifier))
+        (field_pattern
+          name: (identifier))
+        (ERROR))
+      value: (identifier))))
+
+==================
+D67: the separator is required throughout the pattern family (E0201 shapes)
+==================
+
+fn m() {
+    match p {
+        Point { x .. } => 1
+        Point { x y } => 2
+        (a b) => 3
+        Some(a b) => 4
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (expression_statement
+        (match_expression
+          value: (identifier)
+          body: (match_body
+            (match_arm
+              pattern: (struct_pattern
+                type: (path
+                  (identifier))
+                (field_pattern
+                  name: (identifier))
+                (ERROR))
+              body: (integer_literal))
+            (match_arm
+              pattern: (struct_pattern
+                type: (path
+                  (identifier))
+                (field_pattern
+                  name: (identifier))
+                (ERROR
+                  (identifier)))
+              body: (integer_literal))
+            (match_arm
+              pattern: (tuple_pattern
+                (identifier)
+                (ERROR
+                  (identifier)))
+              body: (integer_literal))
+            (match_arm
+              pattern: (constructor_pattern
+                type: (path
+                  (identifier))
+                (identifier)
+                (ERROR
+                  (identifier)))
+              body: (integer_literal))))))))

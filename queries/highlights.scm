@@ -13,6 +13,10 @@
 (escape_sequence) @constant.character.escape
 (brace_escape) @constant.character.escape
 
+; `STR_ESC` derives it or it is E0101 at the escape (v0.2.2) — the
+; refusal is a node, not an ERROR, so the rest of the literal survives.
+(invalid_escape) @error
+
 ; interpolation braces are code, not string content
 (interpolation
   "{" @punctuation.special
@@ -196,6 +200,7 @@
   "timeout"
   "rc"
   "pool"
+  "cap"
   "pkg"
   "c"
 ] @keyword

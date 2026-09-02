@@ -95,3 +95,27 @@ unsafe {
         (assume_statement
           (identifier)
           (identifier))))))
+
+==================
+D69: a capture list's separator is required
+==================
+
+fn m() {
+    unsafe c [p q] { int x; }
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (expression_statement
+        (unsafe_expression
+          (capture_list
+            (identifier)
+            (ERROR
+              (identifier)))
+          body: (c_block
+            (c_code)))))))

@@ -595,3 +595,105 @@ let grouped = (a + b) * c
             (identifier)
             (identifier)))
         (identifier)))))
+
+==================
+D69: a struct literal's separating comma is required (E0201 shapes)
+==================
+
+fn m() {
+    let p = Point { x: 1 y: 2 }
+    let q = Point { x y }
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (struct_expression
+            name: (type_path
+              (path
+                (identifier)))
+            body: (field_initializer_list
+              (field_initializer
+                name: (identifier)
+                value: (integer_literal))
+              (ERROR
+                (identifier)
+                (integer_literal))))))
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (struct_expression
+            name: (type_path
+              (path
+                (identifier)))
+            body: (field_initializer_list
+              (shorthand_field_initializer
+                (identifier))
+              (ERROR
+                (identifier)))))))))
+
+==================
+D69: the newline-separated spelling is the same refusal
+==================
+
+fn m() {
+    let p = Point {
+        x: 1
+        y: 2
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (struct_expression
+            name: (type_path
+              (path
+                (identifier)))
+            body: (field_initializer_list
+              (field_initializer
+                name: (identifier)
+                value: (integer_literal))
+              (ERROR
+                (identifier)
+                (integer_literal)))))))))
+
+==================
+D69: a closure's parameter separator is required
+==================
+
+fn m() {
+    let f = fn(a b) 1
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (closure_expression
+            parameters: (closure_parameters
+              (closure_parameter
+                name: (identifier))
+              (ERROR
+                (identifier)))
+            body: (integer_literal)))))))
