@@ -1023,6 +1023,7 @@ module.exports = grammar({
       repeat(choice(
         $._string_content,
         $.escape_sequence,
+        $.invalid_escape,
         $.brace_escape,
         $.interpolation,
       )),
@@ -1034,28 +1035,43 @@ module.exports = grammar({
     // `{{` and `}}` are literal braces [gram.lex.str.escape].
     brace_escape: _ => token.immediate(prec(2, /\{\{|\}\}/)),
 
-    // v0.2.1's `UNI_ESC` bound binds in string literals too — the prose
-    // says so outright ("it binds in string literals too
-    // `[gram.lex.str.escape]`"). It is NOT encoded here, on purpose,
-    // and this is the "where it cannot" half of the le04 reading.
+    // `STR_ESC` (v0.2.2, spec/grammar.ebnf) — the string escape finally
+    // has a production of its own, which is le04's wolf-lang#198 closed:
+    // `STR_PART ::= STR_TEXT | STR_ESC | '{{' | '}}' | INTERP`, and
+    // `CHAR_ESC ::= STR_ESC | '\' "'"` reads the char set off it instead
+    // of restating it. The set is `\n \t \r \0 \\ \"`, `\xHH`, and
+    // `UNI_ESC`'s one-to-six-digit `\u{…}` — "and nothing else; any
+    // other `\` is E0101 at the escape". `\'` is a char literal's
+    // escape ONLY: inside `"…"` the prose names it E0101 like any other
+    // unknown escape, so it lands in `invalid_escape` below.
+    escape_sequence: _ => token.immediate(prec(3,
+      /\\([ntr0\\"]|x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]{1,6}\})/,
+    )),
+
+    // Everything `STR_ESC` does NOT derive, as a node of its own. This
+    // is le04's flagged-not-taken half, taken at le05 now that v0.2.2
+    // makes the string escape set a production rather than a prose
+    // bullet — and it is taken THIS way because le04 measured the two
+    // alternatives and both lie:
     //
-    // The token's last alternative is a `.` catch-all (the escape SET
-    // is deliberately permissive here — `\q` is sema's E0101, not the
-    // grammar's). Bounding the `u{…}` branch to `{1,6}` therefore does
-    // not produce an ERROR the way the char literal does: `"\u{0000041}"`
-    // lexes as `\u` via the catch-all and then `{0000041}` re-enters
-    // interpolation mode, so the tree gains a plausible-looking
-    // `(interpolation (integer_literal))` where an escape stood. That is
-    // a worse lie than the permissive token — it changes the tree's
-    // SHAPE, and locals/injections read that shape. Measured at le04.
+    //   * bounding `escape_sequence` alone yields no ERROR — the old
+    //     token's last alternative was a `.` catch-all, so
+    //     `"\u{0000041}"` lexed as `\u` and `{0000041}` re-entered
+    //     interpolation mode, growing a plausible-looking
+    //     `(interpolation (integer_literal))` where an escape stood;
+    //   * an ERROR node would throw away the rest of an otherwise fine
+    //     literal, and `locals.scm`/`injections.scm` read tree SHAPE.
     //
-    // So the digit count stays unbounded inside `"…"` and the refusal
-    // stays wolfc's. Encoding it honestly here needs a distinct node
-    // (an `invalid_escape` painted `@error`), which is a new node in the
-    // public surface and a downstream change in wolf-lsp's queries and
-    // inventories — flagged, not taken, at le04.
-    escape_sequence: _ => token.immediate(prec(2,
-      /\\(x[0-9a-fA-F]{2}|u\{[0-9a-fA-F]+\}|.)/,
+    // `invalid_escape` keeps the shape — one escape token exactly where
+    // one escape stands — and names the refusal, painted `@error` in
+    // `queries/highlights.scm`. It is a NEW node in the public surface;
+    // wolf-lsp's node inventory takes it at this same pin.
+    //
+    // The `u\{…\}` alternative is listed first on purpose: it must eat
+    // the whole over-long escape (seven digits and up, and the
+    // zero-digit `\u{}`) so nothing re-enters interpolation mode.
+    invalid_escape: _ => token.immediate(prec(2,
+      /\\(u\{[0-9a-fA-F]*\}|x[0-9a-fA-F]?|.)/,
     )),
 
     // Inside the braces the lexer re-enters normal token mode; the first
@@ -1084,6 +1100,7 @@ module.exports = grammar({
       repeat(choice(
         alias($._multiline_string_content, $.string_content),
         $.escape_sequence,
+        $.invalid_escape,
         $.brace_escape,
         $.interpolation,
       )),

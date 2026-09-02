@@ -240,7 +240,7 @@ let cfg = path"/etc/hosts"
         (string_content)))))
 
 ==================
-the \u{…} digit bound is NOT encoded inside a string (grammar cannot refuse)
+the \u{…} digit bound now binds inside a string too (STR_ESC, v0.2.2)
 ==================
 
 let ok = "six \u{000041}"
@@ -258,4 +258,71 @@ let over = "seven \u{0000041}"
     (binder
       (identifier)
       (string_literal
+        (invalid_escape)))))
+
+==================
+STR_ESC's whole licensed set, and nothing else
+==================
+
+let s = "\n\t\r\0\\\" \x41 \u{41} \u{1F43A}"
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
+        (escape_sequence)
         (escape_sequence)))))
+
+==================
+an unlicensed escape is a node, not an ERROR, and \' is a char's alone
+==================
+
+let unknown = "\q"
+let quote = "\'"
+let empty = "\u{}"
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (invalid_escape))))
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (invalid_escape))))
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (invalid_escape)))))
+
+==================
+the over-long escape does not re-enter interpolation mode
+==================
+
+let s = "who {name} then \u{0000041} tail"
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (string_literal
+        (interpolation
+          (identifier))
+        (invalid_escape)))))
