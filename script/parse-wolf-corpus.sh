@@ -22,8 +22,10 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # path) cannot go green by parsing nothing. Ratchets as the corpus grows,
 # never down. Measured 443 at wolf-lang 83f83bb (le03); re-measured 454
 # at v0.2.1 / trunk e6548a9 (le04) — 467 `.lu` files, 13 parse-tier
-# counter-examples excluded by directive.
-FLOOR="${FLOOR:-454}"
+# counter-examples excluded by directive; re-measured 463 at v0.2.2
+# (the corpus is byte-identical at the tag and at trunk 4d9683d) — 482
+# `.lu` files, 19 parse-tier counter-examples excluded by directive.
+FLOOR="${FLOOR:-463}"
 
 total=0
 skipped=0
