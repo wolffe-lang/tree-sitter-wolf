@@ -589,9 +589,25 @@ module.exports = grammar({
 
     // ------------------------------------------ blocks [gram.expr.block]
 
+    // `block ::= '{' stmt* expr? '}'` with every stmt production ending
+    // in TERM (`expr_stmt ::= expr TERM`, `let_item ::= … TERM`, …):
+    // a statement is terminated, the block's trailing expression is not.
+    //
+    // le05 takes the TERM literally, because without it D69's struct
+    // literal has an escape hatch. `let p = Point { x y }` cannot be a
+    // struct_expression — `field_initializer_list` has always demanded
+    // the separator — but GLR would re-read it as `let p = Point`
+    // followed by a bare block statement `{ x y }` holding two
+    // unterminated expression statements, and hand back a clean tree
+    // where wolfc reports E0201. Requiring the TERM kills that reading
+    // at its second statement, and the ERROR lands on the missing
+    // separator. Measured: 104/104 corpus cases, 463 corpus files at
+    // zero ERRORs, and a 21-spelling battery of legal one-liners,
+    // tail expressions, nested items and comments all still parse.
     block: $ => seq(
       '{',
-      repeat(choice($._terminator, $._statement)),
+      repeat(choice($._terminator, seq($._statement, $._terminator))),
+      optional($._statement),
       '}',
     ),
 
