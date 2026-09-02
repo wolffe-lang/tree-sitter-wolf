@@ -1,5 +1,53 @@
 # Changelog
 
+## le06 — 2026-09-02 — two types wolf does not have
+
+The `v0.2.2..v0.2.3` spec diff asks nothing of `grammar.js`, and the
+re-reading found something in the query files instead.
+
+**`usize` and `isize` are gone from `@type.builtin`.** They have been in
+`queries/highlights.scm` since the first queries commit (le02,
+`743b592`), unjustified there and unjustifiable now: no `spec/*.md` file
+names either one at v0.2.3 (`grep -rn 'usize\|isize' spec/` is empty),
+and neither is in the compiler's closed builtin set. Painting a name
+`@type.builtin` tells a reader the language HAS that type, so this list
+was teaching two types that do not exist — the same class of error
+wolf-lsp#4 was, pointed the other way. `wrapping` takes their place:
+D56's wrapping-arithmetic constructor (`wrapping[u32]`,
+`[type.numlit.cast.wrap]`) is a real builtin type name and was the one
+name in that set this list had never carried.
+
+**`byte` needed nothing, and waits on nothing.** le06's contract asked
+whether `byte` should join the list if wolf-lang s135 had merged by the
+grammar step. Measured: s135 has NOT merged (trunk tops out at `5241ab7`,
+the r06 release merge; there is no `origin/s135`), and `byte` has been in
+this list since le02 and is a builtin at v0.2.3 regardless. Nothing to
+add, nothing to defer to le07 — see `docs/spec-findings-le06.md` §2 for
+what le07 may owe instead if s135 lands byte-tier *syntax*.
+
+**wolf-lang#215 is closed, and the grammar was already right.** le05
+filed `MULTILINE_STRING`, `RAW_STRING` and `STR_TEXT` as named-and-
+undefined; v0.2.3 defines all three plus `SCALAR`, `NL`, `MULTI_PART`,
+`MULTI_TEXT`, `HASH_FENCE`, `RAW_TEXT`, `GENERALIZED_STRING`, `GEN_TEXT`
+and `CHAR_TEXT`. No grammar change follows, and that is the point:
+`raw_string_literal` has had no `$.interpolation` child and
+`generalized_string_literal` a flat immediate body since le02, read off
+the prose — and `RAW_TEXT ::= SCALAR*` / `GEN_TEXT ::= (SCALAR - ('"' |
+NL))*` say exactly that. The productions are now the vendored proof of
+which reading was right, which is what wolf-lsp le06 needed to fix its
+tmLanguage (wolf-lsp#4/#5).
+
+**Gates and the floor.** All four green at the v0.2.3 corpus: the
+committed parser matches `grammar.js`, the suite holds at **111**, the
+three query files load, and wolf-lang's corpus parses at zero ERROR
+nodes — 486 `.lu` files, 20 parse-tier counter-examples excluded by
+directive, **466** gated. The floor ratchets **463 → 466**. It tracks
+trunk rather than a tag, because that is what the gate checks out; a
+floor left at a v0.2.2 measurement would let the gate lose three files'
+worth of coverage silently.
+
+No known gaps carried forward.
+
 ## le05 — 2026-09-02 — the separator is the law
 
 wolf-lang **v0.2.2**'s grammar deltas reach the grammar, and le04's two
