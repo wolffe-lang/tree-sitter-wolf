@@ -15,8 +15,11 @@ What's here:
   precedence climb, `[]` generics, regions, traits and `dyn`, closures,
   `match` row patterns and struct patterns (`[gram.pat.struct]`), char
   literals (`[gram.lex.char]`, D58), D63 binder comma groups, postfix
-  `?` and `!T` error rows, call-site `f(mut x)`, and Go-adapted newline
-  termination (`[gram.lex.newline]`).
+  `?` and `!T` error rows, call-site `f(mut x)`, region caps
+  (`[mem.region.cap.1]`), and Go-adapted newline termination
+  (`[gram.lex.newline]`) — which blocks now take literally, because
+  `expr_stmt ::= expr TERM` is what stops D69's refused struct literal
+  from being re-read as a bare block.
 - `src/scanner.c` — external scanner for `"""` multiline strings (a lone
   `"` or `""` is content; the literal ends exactly at the next `"""`) and
   raw-string `#`-fences.
@@ -44,11 +47,24 @@ parse is a bug or a filed spec-silence finding, not an exclusion.
 
 A tree-sitter grammar has no refusal, only an ERROR node, so a lexer-tier
 rule is encoded only where the token boundary happens to make it visible.
-`'\u{…}'` is the worked case: v0.2.1's `UNI_ESC` bounds the escape at one
-to six hex digits, and because nothing else starts with `'`, seven digits
-leave an ERROR exactly where wolfc reports E0101 — while the same bound
-inside `"…"` is left unencoded on purpose, because encoding it there
-silently reshapes the tree instead of marking it. `docs/spec-findings-le04.md`
-records both halves.
+`\u{…}` is the worked case: `UNI_ESC` bounds the escape at one to six hex
+digits, and because nothing else starts with `'`, seven digits leave an
+ERROR in a char literal exactly where wolfc reports E0101. Inside `"…"`
+there is no such boundary, so le05 gives the refusal a node instead: with
+v0.2.2 making the string escape set a production of its own (`STR_ESC`),
+everything that set does not derive lexes as **`invalid_escape`**, painted
+`@error`. That keeps the tree's shape — one escape token where one escape
+stands — where both alternatives lie: a bounded permissive token made
+`"\u{0000041}"` re-enter interpolation mode and grow a fake
+`(interpolation (integer_literal))`, and an ERROR node would throw away the
+rest of an otherwise fine literal. `docs/spec-findings-le04.md` records the
+measurement; `docs/spec-findings-le05.md` records the node.
+
+The parser-tier separator law is encoded the same way, and there it *is*
+visible: D67 and D69 make the comma required between pattern members,
+struct-literal fields, closure parameters and capture-list names, so
+`Point { x .. }`, `Point { x y }`, `fn(a b)` and `unsafe c [a b]` each
+leave an ERROR node exactly at the missing separator, with the enclosing
+node intact.
 
 Licensed under GPL-3.0-or-later.
