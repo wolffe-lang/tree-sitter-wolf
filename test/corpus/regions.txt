@@ -110,3 +110,61 @@ let ok = freeze r == x
         (unary_expression
           (identifier))
         (identifier)))))
+
+==================
+the creation-time cap, on both creation forms
+==================
+
+fn m() {
+    region tight(cap: n - 1) { a() }
+    region r(cap: 4096): pool(Node) { b() }
+    let v = region(cap: n)
+    let w = region(rc, cap: n)
+}
+
+---
+
+(source_file
+  (function_item
+    name: (identifier)
+    parameters: (parameters)
+    body: (block
+      (expression_statement
+        (region_expression
+          name: (identifier)
+          cap: (region_cap
+            value: (binary_expression
+              left: (identifier)
+              right: (integer_literal)))
+          body: (block
+            (expression_statement
+              (call_expression
+                function: (identifier)
+                arguments: (arguments))))))
+      (expression_statement
+        (region_expression
+          name: (identifier)
+          cap: (region_cap
+            value: (integer_literal))
+          strategy: (region_strategy
+            (type_path
+              (path
+                (identifier))))
+          body: (block
+            (expression_statement
+              (call_expression
+                function: (identifier)
+                arguments: (arguments))))))
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (region_expression
+            cap: (region_cap
+              value: (identifier)))))
+      (let_declaration
+        (binder
+          pattern: (identifier)
+          value: (region_expression
+            strategy: (region_strategy)
+            cap: (region_cap
+              value: (identifier))))))))

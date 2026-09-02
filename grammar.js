@@ -841,23 +841,43 @@ module.exports = grammar({
 
     // ------------------------------------------ regions [gram.expr.region]
 
+    // v0.2.2 splits the sugar in two and adds the creation-time byte
+    // budget (`region_cap`, s132, `[mem.region.cap.1]`). The split is
+    // the grammar's OWN disambiguation, not an accident: on the sugar
+    // form the cap parenthesis follows the NAME, so an anonymous sugar
+    // block takes no cap — `region (cap: n)` is already the value form.
     region_expression: $ => choice(
-      // sugar: `region tmp { … }`, `region r: pool(Node) { … }`
+      // sugar, named: `region tmp { … }`, `region r(cap: 4096): pool(Node) { … }`
       seq(
         'region',
-        optional(field('name', $.identifier)),
+        field('name', $.identifier),
+        optional(seq('(', field('cap', $.region_cap), ')')),
         optional(seq(':', field('strategy', $.region_strategy))),
         field('body', $.block),
       ),
-      // value: `region()`, `region(rc)`
-      seq('region', '(', optional(field('strategy', $.region_strategy)), ')'),
+      // sugar, anonymous: `region { … }`, `region: rc { … }` — no cap
+      seq(
+        'region',
+        optional(seq(':', field('strategy', $.region_strategy))),
+        field('body', $.block),
+      ),
+      // value: `region()`, `region(rc)`, `region(cap: n)`, `region(rc, cap: n)`
+      seq('region', '(', optional(choice(
+        seq(
+          field('strategy', $.region_strategy),
+          optional(seq(',', field('cap', $.region_cap))),
+        ),
+        field('cap', $.region_cap),
+      )), ')'),
     ),
 
-    // `rc` / `pool` are contextual keywords [gram.inv.ctx].
+    // `rc`, `pool` and `cap` are contextual keywords [gram.inv.ctx].
     region_strategy: $ => choice(
       'rc',
       seq('pool', '(', $._type, ')'),
     ),
+
+    region_cap: $ => seq('cap', ':', field('value', $._expression)),
 
     // `in r { … }` — allocations land in r.
     in_expression: $ => seq(

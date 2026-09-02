@@ -200,6 +200,7 @@
   "timeout"
   "rc"
   "pool"
+  "cap"
   "pkg"
   "c"
 ] @keyword
