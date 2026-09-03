@@ -74,10 +74,30 @@
 (row_entry (path (identifier) @type.enum.variant))
 (struct_expression name: (type_path (path (identifier) @type)))
 
+;; The builtin scalar names, and this list is CLOSED because the language's
+;; is. `usize` and `isize` rode in with the first queries commit (le02) as
+;; unexamined Rust-isms: no `spec/*.md` names either one, and neither is in
+;; the compiler's closed builtin set at the v0.2.3 tag. Painting them
+;; @type.builtin taught a reader two types wolf does not have — the same
+;; wrong as painting a raw literal's braces, filed the other way round. Gone
+;; at le06.
+;;
+;; `wrapping` joins them instead: D56's wrapping-arithmetic constructor is
+;; a builtin type name (`wrapping[u32]`, `[type.numlit.cast.wrap]`), and it
+;; is the one name in that set this list had never carried.
+;;
+;; `byte` was already here and it is correct — le06 checked, since the
+;; sprint contract expected it might still be owed. It is a builtin at this
+;; tag already; whatever wolf-lang s135 does to the byte tier, this line does
+;; not wait on it.
+;;
+;; `Self` stays out deliberately: it is not a builtin type NAME but a
+;; context-bound alias, and it already paints through `(type_path (path
+;; (identifier)) @type)` wherever it can appear.
 ((identifier) @type.builtin
   (#any-of? @type.builtin
     "int" "uint" "i8" "i16" "i32" "i64" "u8" "u16" "u32" "u64"
-    "f32" "f64" "bool" "str" "byte" "usize" "isize" "char"))
+    "f32" "f64" "bool" "str" "byte" "char" "wrapping"))
 
 (type_path (path (identifier) @type))
 (dyn_type (path (identifier) @type))
