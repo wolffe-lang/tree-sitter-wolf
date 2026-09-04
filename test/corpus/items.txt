@@ -520,3 +520,25 @@ fn f() -> int { 0 }
     (block
       (expression_statement
         (integer_literal)))))
+
+==================
+D74: a byte order mark anywhere but the start is a stray character
+==================
+
+let a = 1
+﻿
+let b = 2
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (integer_literal)))
+  (ERROR
+    (UNEXPECTED 65279))
+  (let_declaration
+    (binder
+      (identifier)
+      (integer_literal))))

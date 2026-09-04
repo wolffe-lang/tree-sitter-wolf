@@ -1,5 +1,92 @@
 # Changelog
 
+## le07 — 2026-09-03 — the byte asks nothing, the BOM asks once
+
+The `v0.2.3..v0.2.4` spec diff is 158 added lines across five files and
+asks `grammar.js` for **nothing**. That is the measured answer, not an
+assumption; `docs/spec-findings-le07.md` is the reading.
+
+**`[type.byte]` adds no syntax, and says so itself.** spec §4b is 70
+lines of typing — layout, casts, the widening operator rule, the
+interpolation rule — and closes the grammar question in its own clause:
+`byte` is a builtin type NAME, not a keyword, and `[gram.inv.kw]`'s
+closed set stays at 50 (checked: the production is byte-identical across
+the diff). Every spelling the clause rules is syntax this grammar has
+parsed since le02 — `List[byte]` is a generic type path, `65 as byte` a
+cast, `b + 1` a binary expression whose parse never saw the operand
+types, `{b:x}` the ordinary format spec. Crucially §4b writes "there is
+no suffix inventory", so the ONE byte-tier shape that would have been a
+lexer change (`65byte`) did not arrive — that was the thing le06 flagged
+as possibly owed to le07 (`spec-findings-le06.md` §2), and it is owed no
+longer. `byte` was already in `@type.builtin`; it stays.
+
+**The builtin list re-checked, and `char` is the interesting one.** le06
+struck `usize`/`isize` on a two-limb conjunction: no `spec/*.md` names
+them AND they are absent from the compiler's closed set. Both limbs were
+re-run at v0.2.4. `byte` now passes BOTH — it has entered
+`wolf_sema`'s `BUILTIN_TYPES` and has a `Prim::Byte` — where le06 could
+only rest it on the spec. But `char` passes NEITHER compiler limb:
+`grep -rn '"char"' compiler` is empty at v0.2.4, no `Prim::Char`, not in
+`BUILTIN_TYPES`. It stays in `@type.builtin` regardless, because the test
+is a conjunction and `char` owns a whole spec section (`[type.char]`,
+D58, 51 mentions). Recorded so a later sprint reading the compiler table
+alone does not strike a type the language plainly has: the mid-end has
+not landed `char`; the language has it. `i16` and `uint` are the mirror —
+absent from the spec prose, present in the compiler — and stay for the
+same reason.
+
+**D74's BOM rule is satisfied, and the harness will tell you it is not.**
+`[gram.lex.source]` gained the one new sentence in the diff that reaches
+the grammar's file start: a byte order mark at the very start is stripped
+and never a diagnostic; anywhere else it is a stray character (E0107).
+Two opposite behaviours for the same three bytes, and which one you
+measure depends on the door:
+
+- `tree-sitter parse <file>` (the CLI, Gate 4's door) — leading BOM
+  clean, root at `[0, 3]`; mid-file BOM `ERROR`. **Correct.**
+- the **C library over a buffer** — leading BOM clean, mid-file
+  `(ERROR (UNEXPECTED 65279))`. **Correct**, and this is the door that
+  matters: nvim, helix and zed hand the parser a buffer, never a path,
+  and D74 has the formatter KEEP the mark, so the buffer really does
+  still start `EF BB BF`. Taken by compiling the committed
+  `src/parser.c` + `src/scanner.c` against the `tree-sitter` crate.
+- `tree-sitter test` — reports the LEADING BOM as
+  `(ERROR (UNEXPECTED 65279))`. **Wrong**: the harness does not perform
+  the runtime's position-0 skip that both other doors do.
+
+Three tests written to pin the leading-BOM tolerance therefore failed,
+and the obvious fix — U+FEFF into `extras`, or an optional BOM token
+opening `source_file` — would go green in the harness and **break the
+editors**, because `extras` cannot distinguish position 0 and would make
+a mid-file BOM trivia too, retiring E0107's half of D74 outright.
+`grammar.js` is unchanged on purpose. What is pinned instead: the
+mid-file half in the suite (a new `test/corpus/items.txt` case asserting
+`(ERROR (UNEXPECTED 65279))`, beside the shebang tests — all three doors
+agree on that half), and the leading half by Gate 4, since wolf-lang's
+`corpus/grammar/bom_at_start.lu` is a `phase: run` file with a real
+`EF BB BF` prefix and is one of the gated 478.
+
+**`[os.net.unix]` adds no syntax either.** `net_listen_unix` and
+`net_connect_unix` are calls over plain identifiers, and this repo keeps
+no builtin-FUNCTION list — `highlights.scm` paints calls structurally,
+never by name, so the net tier's growth reaches it for free. The nine
+`corpus/net/` files, `unix_echo.lu` included, parse clean.
+`02-memory-model.md`'s edits are `List[int]` → `List[byte]` in prose.
+
+**Gates and the floor.** All four green at the v0.2.4 corpus: the
+committed parser matches `grammar.js`, the suite holds at **112** (111 +
+the mid-file BOM case), the three query files load, and wolf-lang's
+corpus parses at zero ERROR nodes — 503 `.lu` files at trunk `1323c4e`,
+25 parse-tier counter-examples excluded by directive, **478** gated. The
+floor ratchets **466 → 478**. (The sprint contract predicted 511 `.lu`
+files; the tree holds 503 at the tag and at trunk both, and the floor
+follows the measurement.)
+
+Known gap carried forward: the leading-BOM tolerance is a tree-sitter
+RUNTIME behaviour this CI cannot assert through the harness, and the
+harness actively disagrees with it. Do not "fix" `grammar.js` to satisfy
+a harness failure on a leading BOM — `docs/spec-findings-le07.md` §3.
+
 ## le06 — 2026-09-02 — two types wolf does not have
 
 The `v0.2.2..v0.2.3` spec diff asks nothing of `grammar.js`, and the
