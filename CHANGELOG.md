@@ -1,5 +1,64 @@
 # Changelog
 
+## le08 — 2026-09-05 — five calls, and the grammar does nothing again
+
+The `v0.2.4..v0.2.5` spec diff is **two files, 168 added lines, zero
+removed** — `spec/11-os.md` (+163) and `spec/anchors.json` (+5) — and it
+asks `grammar.js` for **nothing**. The sprint contract predicted that;
+`docs/spec-findings-le08.md` is the measurement that confirms it, taken
+three ways rather than assumed.
+
+**s137's five clauses are five builtin FUNCTIONS.**
+`[os.net.listen.opts]` (`net_listen_with`), `[os.net.wait]`
+(`net_wait`), `[os.proc.inherit]` (`os_spawn_with`,
+`net_adopt_listener`) and `[os.cpus]` (`os_cpus`) — `[os.proc]` is a
+section header that declares no call. Not one new type name, keyword,
+operator or literal form. Three independent limbs say so:
+`spec/01-grammar.md` is **absent from the diff**, so `[gram.inv.kw]`'s
+closed set stays at 50 and every production is byte-identical; the
+reference compiler's `wolf_lex` and `wolf_parse` crates changed in
+**exactly eight files, all `tests/snapshots/*.snap`** — the four new
+witnesses' snapshots, **no `src/` file in either crate** — which a
+release that added a token could not have done; and
+`crates/wolf_sema/src/prelude.rs`'s `BUILTIN_TYPES` is byte-identical at
+seventeen names. What grew is `PRELUDE`, the builtin FUNCTION list.
+
+**This repo keeps no builtin-function list, and that is the point.**
+`queries/highlights.scm` paints calls structurally
+(`(call_expression function: (identifier) @function)`), never by name, so
+all five of s137's calls highlight correctly the moment they are written.
+Second release running where the OS tier grew and this repo did nothing —
+the design working, not the sprint skipped. `grammar.js` unchanged,
+`queries/*.scm` unchanged.
+
+**le07's `char` finding is retired — it was measured through a path that
+does not exist.** le07 §2 recorded that `char` is "in NEITHER limb of the
+compiler", citing `grep -rn '"char"' compiler` as empty. wolf-lang has no
+`compiler/` directory — at trunk, at `v0.2.4`, or at `v0.2.5`; the crates
+live at `crates/`. A recursive grep of a nonexistent path returns nothing,
+and that nothing was read as an absence. Measured correctly at **both**
+pins: `char` **is** in `BUILTIN_TYPES` (fourth name in the literal) and
+`Prim::Char` **does** exist (`crates/wolf_mem/src/ubcheck.rs`, three match
+arms). le07's conclusion — keep `char` in `@type.builtin` — was right; its
+reason was not, and "the mid-end has not landed `char`" is exactly the
+sentence a later sprint would have acted on. The two-limb test was re-run
+correctly across the whole set: seventeen names in, seventeen out;
+`usize`/`isize` still fail both limbs and stay struck.
+
+**Gates and the floor.** All four green at the v0.2.5 corpus: the
+committed parser matches `grammar.js`, the suite holds at **112**, the
+three query files load, and wolf-lang's corpus parses at zero ERROR nodes
+— 507 `.lu` files at trunk `6263ffa` (byte-identical at the tag), the
+same 25 parse-tier counter-examples excluded by directive, **482** gated.
+The floor ratchets **478 → 482**. The four added files are exactly
+s137's four witnesses, all `phase: run`, so the exclusion count did not
+move.
+
+Known gap carried forward, unchanged: le07 §3's leading-BOM tolerance is
+a tree-sitter RUNTIME behaviour this CI cannot assert through the
+harness, and the harness actively disagrees with it. Do not "fix"
+`grammar.js` to satisfy a harness failure on a leading BOM.
+
 ## le07 — 2026-09-03 — the byte asks nothing, the BOM asks once
 
 The `v0.2.3..v0.2.4` spec diff is 158 added lines across five files and

@@ -30,14 +30,18 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # v0.2.4 / trunk 1323c4e (le07) — 503 `.lu` files, 25 parse-tier
 # counter-examples excluded by directive, zero ERROR nodes. (The le07
 # contract predicted 511 `.lu` files; the tree holds 503 at both the tag
-# and trunk, and the floor follows the measurement.)
+# and trunk, and the floor follows the measurement.) Re-measured 482 at
+# v0.2.5 / trunk 6263ffa (le08) — 507 `.lu` files (s137's four new
+# witnesses: net/reuse_port, net/wait_readiness, net/inherit_listener,
+# os/cpus), the same 25 parse-tier counter-examples excluded, zero ERROR
+# nodes; the corpus is byte-identical at the tag and at trunk.
 #
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-478}"
+FLOOR="${FLOOR:-482}"
 
 total=0
 skipped=0
