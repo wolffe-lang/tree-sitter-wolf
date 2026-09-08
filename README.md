@@ -1,8 +1,8 @@
 # tree-sitter-wolf
 
 The tree-sitter grammar for wolf (`.lu` files, lupus), for editor and
-GitHub syntax highlighting. Written by sprint le02 as an **independent
-reading of the spec** — `spec/01-grammar.md` and its `[gram.*]` anchors in
+GitHub syntax highlighting. Written as an **independent reading of the
+spec** — `spec/01-grammar.md` and its `[gram.*]` anchors in
 [wolf-lang](https://github.com/wolffe-lang/wolf-lang) are the authority;
 the compiler's parser was deliberately not consulted (the wolf-interp
 doctrine applied to grammar). The port is scoped to highlighting and
