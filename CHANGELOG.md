@@ -88,7 +88,7 @@ could only rest it on the spec. But `char` passes neither compiler limb:
 `BUILTIN_TYPES`. It stays in `@type.builtin` regardless, because the test
 is a conjunction and `char` owns a whole spec section (`[type.char]`,
 D58, 51 mentions). Recorded so a later sprint reading the compiler table
-alone does not strike a type the language plainly has: the mid-end has
+alone does not strike a type the language has: the mid-end has
 not landed `char`; the language has it. `i16` and `uint` are the mirror
 case (absent from the spec prose, present in the compiler) and stay for
 the same reason.
@@ -215,7 +215,7 @@ and closing it is this entry's one structural change. `Point { x: 1 y: 2 }`
 ERRORed, but the shorthand-only `Point { x y }` did not: it cannot be a
 `struct_expression`, so GLR re-read `let p = Point { x y }` as
 `let p = Point` followed by a bare block statement `{ x y }` holding two
-unterminated expression statements, a clean tree exactly where wolfc
+unterminated expression statements, a clean tree where wolfc
 reports E0201. So `block` now takes `[gram.lex.newline]` literally, which
 is the spec's own letter: `block ::= '{' stmt*
 expr? '}'` with `expr_stmt ::= expr TERM` and `let_item ::= … TERM`, so a

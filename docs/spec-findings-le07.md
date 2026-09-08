@@ -79,7 +79,7 @@ Two readings follow, and both leave the query file alone:
   is its own §4, D58, 51 mentions across `spec/*.md`), and le06's test is
   a conjunction: a name goes only when spec AND compiler are both silent.
   Recording it here so a future sprint reading `BUILTIN_TYPES` alone does
-  not strike a type the language plainly has. **The mid-end has not
+  not strike a type the language has. **The mid-end has not
   landed `char`; the language has it.**
 - `i16` and `uint` are the mirror case: zero mentions in `spec/*.md`,
   but both in the compiler's closed set. Same conjunction, same answer:

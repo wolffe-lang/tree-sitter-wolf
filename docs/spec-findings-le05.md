@@ -74,7 +74,7 @@ This is a port note, and the reason `block` changed.
 shorthand-only spelling did not. `let p = Point { x y }` cannot be a
 `struct_expression`, so GLR re-read it as `let p = Point` followed by a
 bare block statement `{ x y }` holding two unterminated expression
-statements: a clean tree, no ERROR, exactly where wolfc reports E0201.
+statements: a clean tree, no ERROR, where wolfc reports E0201.
 That is the same class of lie le04 refused for the string escape, a
 plausible shape where a refusal belongs.
 
