@@ -50,7 +50,7 @@ rule is encoded only where the token boundary happens to make it visible.
 `\u{…}` is the worked case: `UNI_ESC` bounds the escape at one to six hex
 digits, and because nothing else starts with `'`, seven digits leave an
 ERROR in a char literal exactly where wolfc reports E0101. Inside `"…"`
-there is no such boundary, so le05 gives the refusal a node instead: with
+there is no such boundary, so the refusal gets a node instead: with
 v0.2.2 making the string escape set a production of its own (`STR_ESC`),
 everything that set does not derive lexes as **`invalid_escape`**, painted
 `@error`. That keeps the tree's shape — one escape token where one escape
