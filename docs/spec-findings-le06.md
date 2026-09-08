@@ -31,10 +31,10 @@ CHAR_TEXT ::= SCALAR - ("'" | '\' | NL)
 
 No grammar change follows. `grammar.js` read those four literal forms
 off the prose in le02 and has modelled them this way ever since:
-`raw_string_literal` is `_raw_string_start · string_content ·
-_raw_string_end` with no `$.interpolation` child, and
-`generalized_string_literal`'s body is one flat
-`token.immediate(/[^"\r\n]+/)`. `RAW_TEXT ::= SCALAR*` and
+`raw_string_literal` is
+`_raw_string_start · string_content · _raw_string_end` with no
+`$.interpolation` child, and `generalized_string_literal`'s body is one
+flat `token.immediate(/[^"\r\n]+/)`. `RAW_TEXT ::= SCALAR*` and
 `GEN_TEXT ::= (SCALAR - ('"' | NL))*` say the same: no INTERP
 alternative in either. The independent reading of the prose and the
 productions written three sprints later agree.
