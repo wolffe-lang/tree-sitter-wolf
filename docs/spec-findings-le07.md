@@ -10,13 +10,19 @@ gives the opposite answer; §3 has that measurement.
 
 ## 0. The three new anchor families, and what each asks of the grammar
 
-`spec/anchors.json` gains six anchors in three families:
+`spec/anchors.json` gains six anchors in three families. The table below
+lists all six, family roots included — an earlier version listed only the
+four leaves, which made the count look wrong (tree-sitter-wolf#4):
 
 | family | anchors | grammar? |
 | --- | --- | --- |
-| `[type.byte]` | `.cast`, `.interp`, `.op` | **no** |
-| `[os.net]` | `.unix` | **no** |
+| `[type.byte]` | `type.byte`, `.cast`, `.interp`, `.op` (four) | **no** |
+| `[os.net]` | `os.net`, `.unix` (two) | **no** |
 | `[gram.lex.source]` (no new anchor; the prose changed) | — | **no**, and §3 says why that took work to establish |
+
+Measured: `git diff v0.2.3 v0.2.4 -- spec/anchors.json` is `+6`, and the
+six added keys are `os.net`, `os.net.unix`, `type.byte`,
+`type.byte.cast`, `type.byte.interp`, `type.byte.op`.
 
 `[gram.lex.str.multi]`'s D74 rewrite also changed no anchor and no
 production.
