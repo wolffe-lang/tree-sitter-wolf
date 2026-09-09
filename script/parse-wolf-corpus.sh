@@ -35,13 +35,18 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # witnesses: net/reuse_port, net/wait_readiness, net/inherit_listener,
 # os/cpus), the same 25 parse-tier counter-examples excluded, zero ERROR
 # nodes; the corpus is byte-identical at the tag and at trunk.
+# Re-measured 483 at v0.2.6 / trunk 5b8841e (2026-09-08,
+# tree-sitter-wolf#4) — 508 `.lu` files, the same 25 parse-tier
+# counter-examples excluded, and the tag and trunk gate the identical
+# count (their only corpus diff is a five-line edit to
+# test/conc_schedules_test.lu, which adds no file).
 #
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-482}"
+FLOOR="${FLOOR:-483}"
 
 total=0
 skipped=0
