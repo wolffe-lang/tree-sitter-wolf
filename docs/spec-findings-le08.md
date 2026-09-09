@@ -114,7 +114,12 @@ Measured through the real path, at both pins:
 - `char` is in `crates/wolf_sema/src/prelude.rs`'s `BUILTIN_TYPES`,
   fourth name in the literal, `"bool", "str", "byte", "char", …`.
 - `Prim::Char` does exist, at `crates/wolf_mem/src/ubcheck.rs:7735`
-  at v0.2.5 (`:7375` at v0.2.4), in three match arms.
+  at v0.2.5 (`:7375` at v0.2.4), in three match arms. Those two numbers
+  are two measurements and not a transposition, which is worth saying
+  because they read like one: `git grep -n 'Prim::Char' <tag> --
+  crates/wolf_mem/src/ubcheck.rs` answers 7375/7399/7422 at v0.2.4 and
+  7735/7759/7782 at v0.2.5, three arms each. Re-run 2026-09-08 and
+  unchanged at v0.2.6 (tree-sitter-wolf#4).
 
 So `char` passes both limbs of le06's conjunction and always did.
 le07's *conclusion* (keep `char` in `@type.builtin`) is correct, and the
