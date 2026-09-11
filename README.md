@@ -15,13 +15,18 @@ What's here:
   and struct patterns (`[gram.pat.struct]`), char literals
   (`[gram.lex.char]`, D58), D63 binder comma groups, postfix `?` and
   `!T` error rows, call-site `f(mut x)`, region caps
-  (`[mem.region.cap.1]`), and Go-style newline termination
-  (`[gram.lex.newline]`). Blocks take newline termination literally,
-  because `expr_stmt ::= expr TERM` is what stops D69's refused struct
+  (`[mem.region.cap.1]`), the contextual `then` and the bare `if`
+  (`[gram.expr.if]`, s151), the alias bound `trait Num = Add + Sub`
+  (s155), literal range patterns (`[gram.pat.range]`, s147), and
+  Go-style newline termination (`[gram.lex.newline]`). Blocks take
+  newline termination literally, because `expr_stmt ::= expr TERM` is what stops D69's refused struct
   literal from being re-read as a bare block.
 - `src/scanner.c`: an external scanner for `"""` multiline strings (a
-  lone `"` or `""` is content, and the literal ends at the next `"""`)
-  and for raw-string `#` fences.
+  lone `"` or `""` is content, and the literal ends at the next `"""`),
+  for raw-string `#` fences, and for the one terminator decision that
+  needs to read past trivia: a newline whose next token is `else`
+  inserts no terminator (`[gram.lex.newline]`, wolf-lang#276), so a
+  line beginning `else` continues the statement above it.
 - Every plain string literal is an f-string (`[gram.lex.str]`), so
   `{expr}` inside any string is a real expression subtree, including
   nested strings, format specs and `{n:>{w}}`.

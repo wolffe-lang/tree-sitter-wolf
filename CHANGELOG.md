@@ -1,5 +1,71 @@
 # Changelog
 
+## tl01 — 2026-09-11 — the v0.2.11 re-vendor: four syntax deltas, one of them not in the ebnf
+
+Five releases since the last vendor (`v0.2.6..v0.2.11`): 1183 added
+spec lines across ten files, and six changed lines in
+`spec/grammar.ebnf` — three productions.
+
+`trait_item` gained the alias bound (s155): `trait Num = Add + Sub +
+Mul` names every trait in its list. The right-hand side is the same
+`bound ::= path ('+' path)*` a generic parameter takes, so it is the
+same `trait_bound` node, and `(trait_bound (path (identifier) @type))`
+already painted it.
+
+`if_expr` gained a second alternative (s151, wolf-lang#307): `then` is
+optional before a block and required before a bare branch, and `then`
+is contextual, never reserved. Nothing enforces the contextuality here
+and nothing needs to: `word: $ => $.identifier` means an extracted
+keyword is only produced in states that admit it, and the one state
+that admits `then` is the one after a complete `if` condition. Measured
+over the twelve `corpus/grammar/if_then_*.lu` witnesses at `v0.2.11`:
+16 `then` tokens paint `@keyword.control.conditional`, and the other 6
+— three `identifier` bindings, two `.then(` member calls, one `fn then`
+declaration — do not. The braced alternative outranks the bare one so
+`consequence` stays a `block` wherever braces are written; the bare one
+outranks `PREC.ELSE` so the `if`'s own `else` binds before
+`else_expression`'s defaulting one (`[gram.amb.else]`).
+
+`closed_pattern` gained literal ranges (s147, wolf-lang#287): `lo..hi`
+and `lo..=hi`, both endpoints required. Open ends are the slice
+spellings and the compiler refuses them in pattern position, so nothing
+admits them here either.
+
+The fourth delta is not in the ebnf at all. `[gram.lex.newline]` gained
+an exception at `v0.2.9` (wolf-lang#276, retiring E0005): no terminator
+is inserted at a newline whose next token is `else`, past blank lines
+and comments. Terminator insertion is a lexer rule and the extracted
+grammar writes it as the opaque `TERM`, so a re-vendor from
+`spec/grammar.ebnf` alone would have shipped a grammar that ERRORs on
+two gated corpus files. It lives in `src/scanner.c` as
+`NEWLINE_BEFORE_ELSE`. The grammar-level spelling was written and
+measured first and is wrong twice: tree-sitter resolves the
+shift/reduce statically in favour of the shift, so every newline after
+an expression became an ERROR, and had it forked instead it would have
+forked on every line of every file.
+
+s154's `fn_body?` asked for nothing. `fn_item ::= … (block | TERM)` is
+unchanged across the window and `grammar.js` has carried
+`optional(field('body', $.block))` since the extern-function work;
+`corpus/traits/op_eq_inverting.lu` parsed at zero ERROR nodes before
+this lane touched anything. It is now pinned by a test of its own,
+because the pre-existing trait test covered a bodiless member followed
+by a provided one, which is a different shape.
+
+One finding filed against wolf-lang: `[gram.inv.ctx]` §6.2, the
+inventory of contextual keywords, is byte-identical at `v0.2.6` and
+`v0.2.11` and does not list `then`, although `[gram.expr.if]` states
+twice that `then` is contextual and `[gram.inv.kw]`'s closed set
+correctly stays at 50. Every other contextual word is in §6.2. The
+measurement is in `docs/spec-findings-tl01.md`.
+
+The suite grows 112 → 121 (seven `then` tests, the alias bound, the
+bodiless member at the brace). All four gates are green: the committed
+parser matches `grammar.js`, the suite is 121/121, the three query
+files load, and wolf-lang's corpus parses at zero ERROR nodes over 546
+`.lu` files at trunk `be348b9` (541 of 570 at the tag), 29 parse-tier
+counter-examples excluded by directive. The floor ratchets 483 → 546.
+
 ## le08 — 2026-09-05 — five calls, and the grammar does nothing again
 
 The `v0.2.4..v0.2.5` spec diff is two files, 168 added lines, zero
