@@ -3810,8 +3810,25 @@
             }
           },
           {
-            "type": "STRING",
-            "value": "else"
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "_newline_before_else"
+                  },
+                  {
+                    "type": "BLANK"
+                  }
+                ]
+              },
+              {
+                "type": "STRING",
+                "value": "else"
+              }
+            ]
           },
           {
             "type": "FIELD",
@@ -4449,8 +4466,25 @@
                     "type": "SEQ",
                     "members": [
                       {
-                        "type": "STRING",
-                        "value": "else"
+                        "type": "SEQ",
+                        "members": [
+                          {
+                            "type": "CHOICE",
+                            "members": [
+                              {
+                                "type": "SYMBOL",
+                                "name": "_newline_before_else"
+                              },
+                              {
+                                "type": "BLANK"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "STRING",
+                            "value": "else"
+                          }
+                        ]
                       },
                       {
                         "type": "FIELD",
@@ -4516,8 +4550,25 @@
                     "type": "SEQ",
                     "members": [
                       {
-                        "type": "STRING",
-                        "value": "else"
+                        "type": "SEQ",
+                        "members": [
+                          {
+                            "type": "CHOICE",
+                            "members": [
+                              {
+                                "type": "SYMBOL",
+                                "name": "_newline_before_else"
+                              },
+                              {
+                                "type": "BLANK"
+                              }
+                            ]
+                          },
+                          {
+                            "type": "STRING",
+                            "value": "else"
+                          }
+                        ]
                       },
                       {
                         "type": "FIELD",
@@ -6194,6 +6245,10 @@
     {
       "type": "SYMBOL",
       "name": "_raw_string_end"
+    },
+    {
+      "type": "SYMBOL",
+      "name": "_newline_before_else"
     },
     {
       "type": "SYMBOL",

@@ -14,6 +14,11 @@
 //   which reproduces the spec's insertion rule: trailing-style
 //   continuations parse, leading-operator continuations do not, and the
 //   innermost `(`/`[`/interpolation suppresses termination.
+//   The one exception a token cannot see is wolf-lang#276's: no
+//   terminator is inserted when the next token is `else`, past any
+//   trivia. That lookahead is the external scanner's
+//   (`_newline_before_else`); `newlineThenElse()` below is where the
+//   grammar spends it.
 //
 // [gram.lex.str] — every plain string literal is an f-string. The string
 //   rules re-enter full expression mode inside `{…}` (the lexer mode
@@ -71,6 +76,23 @@ function commaSep(rule) {
   return optional(commaSep1(rule));
 }
 
+// [gram.lex.newline] + wolf-lang#276 (ruled 2026-09-09, retiring E0005):
+// no terminator is inserted at a newline when the next token is `else`.
+// `}` newline `else {` is `} else {`, `f()` newline `else 0` is
+// `f() else 0`, and `if c then a` newline `else b` is the bare two-way
+// `if`. Which `else` it is, the binding decides ([gram.amb.else]); the
+// line never does.
+//
+// The lookahead is one token but reaches past trivia (blank lines,
+// comments), which no regex token can do, so the newline in this
+// position is the external scanner's `_newline_before_else`. External
+// tokens are tried first, so it takes the newline exactly when `else`
+// follows and leaves `_newline` to terminate the statement otherwise —
+// one reading, no GLR fork on every line in the file.
+function newlineThenElse($) {
+  return seq(optional($._newline_before_else), 'else');
+}
+
 module.exports = grammar({
   name: 'wolf',
 
@@ -83,6 +105,7 @@ module.exports = grammar({
     $._raw_string_start,
     $._raw_string_content,
     $._raw_string_end,
+    $._newline_before_else,
     $._error_sentinel,
   ],
 
@@ -703,7 +726,7 @@ module.exports = grammar({
     // `expr else |pat| handler` binds the error ([gram.expr.primary]).
     else_expression: $ => prec.right(PREC.ELSE, seq(
       field('value', $._expression),
-      'else',
+      newlineThenElse($),
       field('fallback', choice(
         $.else_handler,
         $._expression,
@@ -839,7 +862,7 @@ module.exports = grammar({
         optional('then'),
         field('consequence', $.block),
         optional(seq(
-          'else',
+          newlineThenElse($),
           field('alternative', choice($.if_expression, $.block)),
         )),
       )),
@@ -849,7 +872,7 @@ module.exports = grammar({
         'then',
         field('consequence', $._expression),
         optional(seq(
-          'else',
+          newlineThenElse($),
           field('alternative', $._expression),
         )),
       )),
