@@ -542,3 +542,58 @@ let b = 2
     (binder
       (identifier)
       (integer_literal))))
+
+==================
+s155: the alias bound names every trait in its list
+==================
+
+trait Num = Add + Sub + Mul + Div + Rem + Eq + Ord
+
+---
+
+(source_file
+  (trait_item
+    (identifier)
+    (trait_bound
+      (path
+        (identifier))
+      (path
+        (identifier))
+      (path
+        (identifier))
+      (path
+        (identifier))
+      (path
+        (identifier))
+      (path
+        (identifier))
+      (path
+        (identifier)))))
+
+==================
+s154: a bodiless member directly before the trait's closing brace
+==================
+
+trait Eq {
+    fn eq(self, other: Self) -> bool
+}
+
+---
+
+(source_file
+  (trait_item
+    (identifier)
+    (declaration_list
+      (function_item
+        (identifier)
+        (parameters
+          (self_parameter
+            (self))
+          (parameter
+            (identifier)
+            (type_path
+              (path
+                (identifier)))))
+        (type_path
+          (path
+            (identifier)))))))

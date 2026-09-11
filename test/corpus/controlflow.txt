@@ -297,3 +297,252 @@ fn parse(s: str) -> int ! {BadDigit(u8), Overflow} {
                 (identifier))))))
       (expression_statement
         (integer_literal)))))
+
+==================
+s151: the optional `then` before a braced branch
+==================
+
+let days = if leap then { 29 } else { 28 }
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (if_expression
+        (identifier)
+        (block
+          (expression_statement
+            (integer_literal)))
+        (block
+          (expression_statement
+            (integer_literal)))))))
+
+==================
+s151: the bare `if`, both branches one expression
+==================
+
+let days = if leap then 29 else 28
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (if_expression
+        (identifier)
+        (integer_literal)
+        (integer_literal)))))
+
+==================
+s151: a bare `else if` chain, and a chain whose last link is braced
+==================
+
+fn sign(n: int) -> str {
+    if n < 0 then "neg" else if n == 0 then "zero" else "pos"
+}
+
+fn tail(n: int) -> str {
+    if n < 0 then "neg" else if n == 0 {
+        "zero"
+    } else {
+        "pos"
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (identifier)
+            (integer_literal))
+          (string_literal)
+          (if_expression
+            (binary_expression
+              (identifier)
+              (integer_literal))
+            (string_literal)
+            (string_literal))))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (binary_expression
+            (identifier)
+            (integer_literal))
+          (string_literal)
+          (if_expression
+            (binary_expression
+              (identifier)
+              (integer_literal))
+            (block
+              (expression_statement
+                (string_literal)))
+            (block
+              (expression_statement
+                (string_literal)))))))))
+
+==================
+s151: `then` is contextual, not reserved
+==================
+
+let then = true
+if then { print("name") }
+let n = if then then 1 else 0
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (boolean_literal)))
+  (expression_statement
+    (if_expression
+      (identifier)
+      (block
+        (expression_statement
+          (call_expression
+            (identifier)
+            (arguments
+              (argument
+                (string_literal))))))))
+  (let_declaration
+    (binder
+      (identifier)
+      (if_expression
+        (identifier)
+        (integer_literal)
+        (integer_literal)))))
+
+==================
+s151: after a `.` `then` is a member name, inside a condition too
+==================
+
+if equal.then(less).v < 0 then print("less") else print("more")
+
+---
+
+(source_file
+  (expression_statement
+    (if_expression
+      (binary_expression
+        (field_expression
+          (call_expression
+            (field_expression
+              (identifier)
+              (identifier))
+            (arguments
+              (argument
+                (identifier))))
+          (identifier))
+        (integer_literal))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal))))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal)))))))
+
+==================
+s151: [gram.amb.else] the `if`'s own `else` binds first, so a defaulting `else` in a bare branch is parenthesized
+==================
+
+fn pick(use_first: bool, a: str, b: str) -> int {
+    if use_first then (parse(a) else 0) else (parse(b) else 1)
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (if_expression
+          (identifier)
+          (parenthesized_expression
+            (else_expression
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (identifier))))
+              (integer_literal)))
+          (parenthesized_expression
+            (else_expression
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (identifier))))
+              (integer_literal))))))))
+
+==================
+s151: the one-armed bare `if` in statement position
+==================
+
+if i == 3 then print("last")
+
+---
+
+(source_file
+  (expression_statement
+    (if_expression
+      (binary_expression
+        (identifier)
+        (integer_literal))
+      (call_expression
+        (identifier)
+        (arguments
+          (argument
+            (string_literal)))))))
