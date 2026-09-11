@@ -40,13 +40,20 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # counter-examples excluded, and the tag and trunk gate the identical
 # count (their only corpus diff is a five-line edit to
 # test/conc_schedules_test.lu, which adds no file).
+# Re-measured 546 at trunk be348b9 (2026-09-11, tl01, the v0.2.11
+# re-vendor) — 575 `.lu` files, 29 parse-tier counter-examples excluded.
+# The corpus grew 67 files over five releases (v0.2.7..v0.2.11); the
+# four new exclusions are s151's three refused `if`/`then` spellings
+# (grammar/if_then_missing, if_then_mixed, if_then_let_body) and s147's
+# refused open range arm (grammar/match_range_open), all E0201. The tag
+# gates 541 of 570: trunk carries five more files than v0.2.11.
 #
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-483}"
+FLOOR="${FLOOR:-546}"
 
 total=0
 skipped=0
