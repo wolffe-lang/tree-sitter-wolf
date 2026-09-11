@@ -142,8 +142,13 @@
   "fn"
 ] @keyword.function
 
+; `then` is contextual (s151, wolf-lang#307): the anonymous node exists
+; only where the grammar admits the keyword, i.e. after a complete `if`
+; condition. `let then = true`, `if then { … }` and `less.then(greater)`
+; are `identifier` nodes and no pattern here can reach them.
 [
   "if"
+  "then"
   "else"
   "match"
   "select"

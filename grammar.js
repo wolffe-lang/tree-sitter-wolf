@@ -46,6 +46,8 @@
 
 const PREC = {
   ELSE: 1,      // `expr else fallback` defaulting (tier 15, loosest)
+  IF_BARE: 2,   // `if c then a else b`: the if's own else binds first
+  IF_BRACED: 3, // `if c then { … }`: braces make the branch a block
   RANGE: 2,     // `..` `..=`, `^n` from-end endpoints (tier 14)
   OR: 3,        // `||`
   AND: 4,       // `&&`
@@ -773,15 +775,54 @@ module.exports = grammar({
 
     // ------------------------------------ control flow [gram.expr.flow]
 
-    if_expression: $ => prec.right(seq(
-      'if',
-      field('condition', $._expression),
-      field('consequence', $.block),
-      optional(seq(
-        'else',
-        field('alternative', choice($.if_expression, $.block)),
+    // [gram.expr.if] — s151 (wolf-lang#307) gave `if` a second spelling:
+    //
+    //   if_expr ::= 'if' expr 'then'? block ('else' (if_expr | block))?
+    //             | 'if' expr 'then' expr  ('else' (if_expr | expr))?
+    //
+    // `then` is CONTEXTUAL, never reserved (it is absent from the ebnf's
+    // `reserved_kw`). It is the keyword in exactly one position: after a
+    // complete `if` condition. Everywhere else the word lexes as
+    // `identifier` — `let then = true`, `if then { … }`, and
+    // `less.then(greater)` after a `.`. Nothing here enforces that; it
+    // falls out of `word: $ => $.identifier` plus LR state. Keyword
+    // extraction only hands back the `then` token in the states that
+    // admit it, and no other state does: member position takes
+    // `identifier` (field_expression), and the condition's own
+    // expression position has not reached the post-condition state yet,
+    // which is why `if then then 1 else 0` reads the identifier first
+    // and the keyword second.
+    //
+    // The braced branch outranks the bare one on `if c then { … }` (a
+    // block is also an expression): that is the ebnf's own order, and it
+    // keeps `consequence` a `block` node wherever braces are written.
+    //
+    // The bare form sits above PREC.ELSE so the `if`'s own `else` binds
+    // before `else_expression`'s defaulting `else` ([gram.amb.else]) —
+    // `if c then (parse(a) else 0) else 1` is why those parens are
+    // load-bearing and the formatter keeps them.
+    if_expression: $ => choice(
+      prec.right(PREC.IF_BRACED, seq(
+        'if',
+        field('condition', $._expression),
+        optional('then'),
+        field('consequence', $.block),
+        optional(seq(
+          'else',
+          field('alternative', choice($.if_expression, $.block)),
+        )),
       )),
-    )),
+      prec.right(PREC.IF_BARE, seq(
+        'if',
+        field('condition', $._expression),
+        'then',
+        field('consequence', $._expression),
+        optional(seq(
+          'else',
+          field('alternative', $._expression),
+        )),
+      )),
+    ),
 
     match_expression: $ => seq(
       'match',
