@@ -11432,10 +11432,20 @@
     "fields": {
       "body": {
         "multiple": false,
-        "required": true,
+        "required": false,
         "types": [
           {
             "type": "declaration_list",
+            "named": true
+          }
+        ]
+      },
+      "bound": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "trait_bound",
             "named": true
           }
         ]

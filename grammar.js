@@ -364,13 +364,25 @@ module.exports = grammar({
 
     // -------------------------------------- traits & impls [gram.item.trait]
 
+    // s155 gave `trait` a second shape, the alias bound:
+    //
+    //   trait_item ::= 'trait' IDENT generics?
+    //                  ('{' trait_member* '}' | '=' bound TERM?)
+    //
+    // `trait Num = Add + Sub + Mul` names every trait in its list. The
+    // right-hand side is the same `bound ::= path ('+' path)*` a generic
+    // parameter takes, so it is the same node; the optional TERM rides
+    // the enclosing statement repeat, as every other `TERM?` item does.
     trait_item: $ => seq(
       repeat($.attribute),
       optional($.visibility_modifier),
       'trait',
       field('name', $.identifier),
       optional(field('type_parameters', $.generic_parameters)),
-      field('body', $.declaration_list),
+      choice(
+        field('body', $.declaration_list),
+        seq('=', field('bound', $.trait_bound)),
+      ),
     ),
 
     impl_item: $ => seq(
