@@ -1131,6 +1131,10 @@
           "named": true
         },
         {
+          "type": "range_pattern",
+          "named": true
+        },
+        {
           "type": "raw_string_literal",
           "named": true
         },
@@ -1721,6 +1725,10 @@
           },
           {
             "type": "or_pattern",
+            "named": true
+          },
+          {
+            "type": "range_pattern",
             "named": true
           },
           {
@@ -3697,6 +3705,10 @@
           "named": true
         },
         {
+          "type": "range_pattern",
+          "named": true
+        },
+        {
           "type": "raw_string_literal",
           "named": true
         },
@@ -4368,6 +4380,10 @@
           },
           {
             "type": "negative_literal",
+            "named": true
+          },
+          {
+            "type": "range_pattern",
             "named": true
           },
           {
@@ -5564,6 +5580,10 @@
             "named": true
           },
           {
+            "type": "range_pattern",
+            "named": true
+          },
+          {
             "type": "raw_string_literal",
             "named": true
           },
@@ -5647,6 +5667,10 @@
           },
           {
             "type": "or_pattern",
+            "named": true
+          },
+          {
+            "type": "range_pattern",
             "named": true
           },
           {
@@ -8288,6 +8312,10 @@
             "named": true
           },
           {
+            "type": "range_pattern",
+            "named": true
+          },
+          {
             "type": "raw_string_literal",
             "named": true
           },
@@ -8815,6 +8843,10 @@
         },
         {
           "type": "or_pattern",
+          "named": true
+        },
+        {
+          "type": "range_pattern",
           "named": true
         },
         {
@@ -9653,6 +9685,96 @@
           },
           {
             "type": "while_expression",
+            "named": true
+          }
+        ]
+      }
+    }
+  },
+  {
+    "type": "range_pattern",
+    "named": true,
+    "fields": {
+      "end": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "boolean_literal",
+            "named": true
+          },
+          {
+            "type": "char_literal",
+            "named": true
+          },
+          {
+            "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "generalized_string_literal",
+            "named": true
+          },
+          {
+            "type": "integer_literal",
+            "named": true
+          },
+          {
+            "type": "multiline_string_literal",
+            "named": true
+          },
+          {
+            "type": "negative_literal",
+            "named": true
+          },
+          {
+            "type": "raw_string_literal",
+            "named": true
+          },
+          {
+            "type": "string_literal",
+            "named": true
+          }
+        ]
+      },
+      "start": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "boolean_literal",
+            "named": true
+          },
+          {
+            "type": "char_literal",
+            "named": true
+          },
+          {
+            "type": "float_literal",
+            "named": true
+          },
+          {
+            "type": "generalized_string_literal",
+            "named": true
+          },
+          {
+            "type": "integer_literal",
+            "named": true
+          },
+          {
+            "type": "multiline_string_literal",
+            "named": true
+          },
+          {
+            "type": "negative_literal",
+            "named": true
+          },
+          {
+            "type": "raw_string_literal",
+            "named": true
+          },
+          {
+            "type": "string_literal",
             "named": true
           }
         ]
@@ -11081,6 +11203,10 @@
             "named": true
           },
           {
+            "type": "range_pattern",
+            "named": true
+          },
+          {
             "type": "raw_string_literal",
             "named": true
           },
@@ -11911,6 +12037,10 @@
         },
         {
           "type": "or_pattern",
+          "named": true
+        },
+        {
+          "type": "range_pattern",
           "named": true
         },
         {

@@ -502,11 +502,30 @@ module.exports = grammar({
     _closed_pattern: $ => choice(
       alias('_', $.wildcard_pattern),
       $._literal_pattern,
+      $.range_pattern,
       $.identifier,
       $.tuple_pattern,
       $.constructor_pattern,
       $.struct_pattern,
       $.at_pattern,
+    ),
+
+    // [gram.pat.range] (s147, wolf-lang#287) — `match` in statement
+    // position is wolf's switch, and the range arm is what the pattern
+    // grammar lacked. `lo..hi` stops before `hi`, `lo..=hi` includes it.
+    //
+    //   closed_pattern ::= ... | literal ('..' | '..=') literal
+    //
+    // The production requires BOTH ends: `..hi` and `lo..` are the slice
+    // spellings of [gram.expr.primary], not patterns, and the compiler
+    // refuses them here (E0201) with a note naming the range form — so
+    // nothing admits an open end. Whether the two endpoints agree on a
+    // type (E0401), carry an order (E0808), or describe an empty range
+    // (`5..5`, `9..=3`, E0815) is sema's; the grammar sees two literals.
+    range_pattern: $ => seq(
+      field('start', $._literal_pattern),
+      choice('..', '..='),
+      field('end', $._literal_pattern),
     ),
 
     _literal_pattern: $ => choice(
