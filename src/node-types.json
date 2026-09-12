@@ -2048,6 +2048,10 @@
           "named": true
         },
         {
+          "type": "error_item",
+          "named": true
+        },
+        {
           "type": "expression_statement",
           "named": true
         },
@@ -4809,6 +4813,46 @@
       "types": [
         {
           "type": "enum_variant",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "error_item",
+    "named": true,
+    "fields": {
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "row": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "error_row",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "visibility_modifier",
           "named": true
         }
       ]
@@ -11680,6 +11724,10 @@
           "named": true
         },
         {
+          "type": "error_item",
+          "named": true
+        },
+        {
           "type": "expression_statement",
           "named": true
         },
@@ -13903,6 +13951,10 @@
   },
   {
     "type": "errdefer",
+    "named": false
+  },
+  {
+    "type": "error",
     "named": false
   },
   {

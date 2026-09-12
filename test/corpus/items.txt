@@ -597,3 +597,153 @@ trait Eq {
         (type_path
           (path
             (identifier)))))))
+
+==================
+s158: the error-set alias is an item, at module and at statement position
+==================
+
+error IoErrors = {none, parse}
+
+pub error Public = {closed}
+
+error Nested = {IoErrors, closed}
+
+fn f() -> !int {
+    error Local = {none}
+    0
+}
+
+---
+
+(source_file
+  (error_item
+    (identifier)
+    (error_row
+      (row_entry
+        (path
+          (identifier)))
+      (row_entry
+        (path
+          (identifier)))))
+  (error_item
+    (visibility_modifier)
+    (identifier)
+    (error_row
+      (row_entry
+        (path
+          (identifier)))))
+  (error_item
+    (identifier)
+    (error_row
+      (row_entry
+        (path
+          (identifier)))
+      (row_entry
+        (path
+          (identifier)))))
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (error_item
+        (identifier)
+        (error_row
+          (row_entry
+            (path
+              (identifier)))))
+      (expression_statement
+        (integer_literal)))))
+
+==================
+s158: `error` is contextual — everywhere but item position it is an identifier
+==================
+
+type Report = struct {
+    error: int,
+}
+
+fn error(n: int) -> int {
+    n + 1
+}
+
+fn main() -> !int {
+    let error = 3
+    error = 4
+    error(error)
+    error.kind
+    let r = Report { error: error + 1 }
+    0
+}
+
+---
+
+(source_file
+  (type_item
+    (identifier)
+    (struct_definition
+      (field_declaration_list
+        (field_declaration
+          (identifier)
+          (type_path
+            (path
+              (identifier)))))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (binary_expression
+          (identifier)
+          (integer_literal)))))
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (let_declaration
+        (binder
+          (identifier)
+          (integer_literal)))
+      (assignment_statement
+        (identifier)
+        (integer_literal))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))
+      (expression_statement
+        (field_expression
+          (identifier)
+          (identifier)))
+      (let_declaration
+        (binder
+          (identifier)
+          (struct_expression
+            (type_path
+              (path
+                (identifier)))
+            (field_initializer_list
+              (field_initializer
+                (identifier)
+                (binary_expression
+                  (identifier)
+                  (integer_literal)))))))
+      (expression_statement
+        (integer_literal)))))

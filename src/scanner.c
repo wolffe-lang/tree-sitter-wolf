@@ -22,6 +22,7 @@
 // f-string mode works inside `"""`), handing those back to the grammar.
 
 #include "tree_sitter/parser.h"
+#include <stdbool.h>
 #include <stdlib.h>
 
 enum TokenType {
@@ -30,6 +31,7 @@ enum TokenType {
   RAW_STRING_CONTENT,
   RAW_STRING_END,
   NEWLINE_BEFORE_ELSE,
+  ERROR_ITEM_KEYWORD,
   ERROR_SENTINEL,
 };
 
@@ -38,6 +40,13 @@ typedef struct {
   uint8_t raw_fence;
   bool in_raw;
 } Scanner;
+
+// A byte that may continue an identifier ([gram.lex.ident]); the
+// keyword scans below use it to refuse a longer word (`errors`).
+static inline bool is_word_byte(int32_t c) {
+  return c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+         (c >= 'A' && c <= 'Z') || c >= 0x80;
+}
 
 void *tree_sitter_wolf_external_scanner_create(void) {
   Scanner *s = (Scanner *)calloc(1, sizeof(Scanner));
@@ -216,6 +225,67 @@ static bool scan_newline_before_else(TSLexer *lexer) {
   return true;
 }
 
+// `error Name = {â¦}` â [gram.item.error] / [gram.inv.ctx], s158
+// (wolf-lang#36). `error` is CONTEXTUAL, and the decision takes THREE
+// tokens: wolfc's own predicate is `Ident("error") Ident '='` and
+// nothing shorter (wolf_parse/src/grammar.rs, `at_error_item`).
+//
+// That is past what `word: $ => $.identifier` keyword extraction can
+// reach, and this is where `error` parts company with `then`. `then`'s
+// admitting state â after a complete `if` condition â admits no
+// identifier at all, so extraction alone is exact there. Statement
+// start admits BOTH this keyword and an `expression_statement`'s
+// leading identifier, so extraction hands back the keyword and the
+// identifier readings die. Measured with a plain `'error'` literal in
+// the rule, before this function existed: `error = 4`, `error(error)`
+// and `error.field` each produced an ERROR node, while
+// `error_alias_ident.lu` still passed â the corpus witness does not
+// put `error` at statement start, so it cannot catch this.
+//
+// The token ends at the `d`; the IDENT and the `=` are lookahead only.
+static bool scan_error_item_keyword(TSLexer *lexer) {
+  // Intra-line whitespace only: a newline may be a terminator token
+  // ([gram.lex.newline]) and eating it here would merge statements.
+  while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+         lexer->lookahead == '\r') {
+    lexer->advance(lexer, true);
+  }
+
+  static const char kw[] = "error";
+  for (unsigned i = 0; i < 5; i++) {
+    if (lexer->lookahead != (int32_t)kw[i]) return false;
+    lexer->advance(lexer, false);
+  }
+  // `errors` is an identifier: the keyword ends at a non-word byte.
+  if (is_word_byte(lexer->lookahead)) return false;
+  lexer->mark_end(lexer);
+
+  // Lookahead 1: a NAME.
+  while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+         lexer->lookahead == '\r') {
+    lexer->advance(lexer, true);
+  }
+  int32_t c = lexer->lookahead;
+  if (!(c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
+        c >= 0x80)) {
+    return false;
+  }
+  while (is_word_byte(lexer->lookahead)) lexer->advance(lexer, true);
+
+  // Lookahead 2: a single `=`. `==` is the comparison operator, so
+  // `error Name == x` is an expression and not an item.
+  while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+         lexer->lookahead == '\r') {
+    lexer->advance(lexer, true);
+  }
+  if (lexer->lookahead != '=') return false;
+  lexer->advance(lexer, true);
+  if (lexer->lookahead == '=') return false;
+
+  lexer->result_symbol = ERROR_ITEM_KEYWORD;
+  return true;
+}
+
 // ------------------------------------------------------------------- driver
 
 bool tree_sitter_wolf_external_scanner_scan(void *payload, TSLexer *lexer,
@@ -224,6 +294,14 @@ bool tree_sitter_wolf_external_scanner_scan(void *payload, TSLexer *lexer,
 
   // Error recovery: every symbol is marked valid. Do nothing clever.
   if (valid[ERROR_SENTINEL]) return false;
+
+  // Guarded on the first byte so the common case costs one comparison.
+  if (valid[ERROR_ITEM_KEYWORD] && !s->in_raw) {
+    int32_t c = lexer->lookahead;
+    if (c == 'e' || c == ' ' || c == '\t' || c == '\r') {
+      if (scan_error_item_keyword(lexer)) return true;
+    }
+  }
 
   if (s->in_raw && (valid[RAW_STRING_CONTENT] || valid[RAW_STRING_END])) {
     return scan_raw_string(s, lexer, valid);

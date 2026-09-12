@@ -106,6 +106,7 @@ module.exports = grammar({
     $._raw_string_content,
     $._raw_string_end,
     $._newline_before_else,
+    $._error_item_keyword,
     $._error_sentinel,
   ],
 
@@ -162,6 +163,7 @@ module.exports = grammar({
       $.let_declaration,
       $.var_declaration,
       $.const_declaration,
+      $.error_item,
       $.assignment_statement,
       $.defer_statement,
       $.assume_statement,
@@ -337,6 +339,30 @@ module.exports = grammar({
         $.enum_definition,
         $._type,               // includes `distinct T` via prefixed_type
       )),
+    ),
+
+    // `error IoErrors = {none, parse}` — s158 (wolf-lang#36),
+    // [gram.item.error]. The name is TRANSPARENT: it is not a type and
+    // has no identity a program can observe, so `-> int ! IoErrors` and
+    // `-> int ! {none, parse}` are the same type. That is sema's; the
+    // grammar just names a row.
+    //
+    // `error` is CONTEXTUAL, never reserved ([gram.inv.ctx]) — the
+    // keyword only in item position with an IDENT and an `=` after it.
+    // It rides `word: $ => $.identifier` the way `then` does, but it is
+    // NOT the same situation and the difference is the whole risk here:
+    // `then`'s admitting state (after a complete `if` condition) admits
+    // no identifier at all, whereas statement start admits both this
+    // keyword and `expression_statement`'s leading identifier. See the
+    // `error` stays an identifier test in items.txt for what that
+    // actually costs.
+    error_item: $ => seq(
+      repeat($.attribute),
+      optional($.visibility_modifier),
+      alias($._error_item_keyword, 'error'),
+      field('name', $.identifier),
+      '=',
+      field('row', $.error_row),
     ),
 
     struct_definition: $ => seq('struct', $.field_declaration_list),
