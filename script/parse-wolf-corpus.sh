@@ -48,12 +48,23 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # refused open range arm (grammar/match_range_open), all E0201. The tag
 # gates 541 of 570: trunk carries five more files than v0.2.11.
 #
+# Re-measured 577 at trunk c1e62fa (2026-09-12, tl04, the s157/s158
+# surface) â 608 `.lu` files, 31 parse-tier counter-examples excluded,
+# zero ERROR nodes. The corpus grew 33 files; the two new exclusions are
+# s158's `list_lit_untyped_empty` (E0419) and `error_alias_open` (E0201).
+# Worth knowing what this run cost: the gate reads wolf-lang's default
+# branch, so s157 and s158 turned it red here with no push to this repo
+# at all. The last recorded green (run 34633743874, 2026-09-11) simply
+# predates them. Thirteen files were failing when tl04 opened â eight
+# `list_lit_*`, four `error_alias_*`, and s157's `match_nullary_variant`,
+# which belongs to no issue this repo had filed.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-546}"
+FLOOR="${FLOOR:-577}"
 
 total=0
 skipped=0
