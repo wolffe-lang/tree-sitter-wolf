@@ -54,6 +54,7 @@ let Line { a: Point { x, .. }, b } = l
         (field_pattern
           (identifier)))
       (identifier))))
+
 ==================
 struct patterns in match arms
 ==================
@@ -203,3 +204,55 @@ fn m() {
                 (ERROR
                   (identifier)))
               body: (integer_literal))))))))
+
+==================
+s157: a bare dotted path is a pattern, and a lone identifier still is not one
+==================
+
+fn name(c: Color) -> str {
+    match c {
+        Color.Red => "red",
+        Color.Blue(shade) => "blue",
+        none => "tag",
+        _ => "other",
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (match_expression
+          (identifier)
+          (match_body
+            (match_arm
+              (path_pattern
+                (path
+                  (identifier)
+                  (identifier)))
+              (string_literal))
+            (match_arm
+              (constructor_pattern
+                (path
+                  (identifier)
+                  (identifier))
+                (identifier))
+              (string_literal))
+            (match_arm
+              (identifier)
+              (string_literal))
+            (match_arm
+              (wildcard_pattern)
+              (string_literal))))))))

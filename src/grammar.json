@@ -2763,6 +2763,10 @@
         },
         {
           "type": "SYMBOL",
+          "name": "path_pattern"
+        },
+        {
+          "type": "SYMBOL",
           "name": "tuple_pattern"
         },
         {
@@ -2845,6 +2849,44 @@
               "name": "float_literal"
             }
           ]
+        }
+      ]
+    },
+    "path_pattern": {
+      "type": "FIELD",
+      "name": "type",
+      "content": {
+        "type": "ALIAS",
+        "content": {
+          "type": "SYMBOL",
+          "name": "_dotted_path"
+        },
+        "named": true,
+        "value": "path"
+      }
+    },
+    "_dotted_path": {
+      "type": "SEQ",
+      "members": [
+        {
+          "type": "SYMBOL",
+          "name": "identifier"
+        },
+        {
+          "type": "REPEAT1",
+          "content": {
+            "type": "SEQ",
+            "members": [
+              {
+                "type": "STRING",
+                "value": "."
+              },
+              {
+                "type": "SYMBOL",
+                "name": "identifier"
+              }
+            ]
+          }
         }
       ]
     },

@@ -563,6 +563,7 @@ module.exports = grammar({
       $._literal_pattern,
       $.range_pattern,
       $.identifier,
+      $.path_pattern,
       $.tuple_pattern,
       $.constructor_pattern,
       $.struct_pattern,
@@ -593,6 +594,27 @@ module.exports = grammar({
     ),
 
     negative_literal: $ => seq('-', choice($.integer_literal, $.float_literal)),
+
+    // `Color.Red` â s157 (wolf-lang#162), [gram.pat.nullary]: a bare
+    // dotted path is a pattern. Until that pin the parser demanded the
+    // parens, so a `match` over a CLOSED SET OF NAMES â the thing an
+    // enum is reached for â could not be spelled at all, and
+    // exhaustiveness had nothing to be exhaustive over. Payload-less
+    // ROW tags take the same bare form. Arity stays the checker's
+    // question either way (E0808 for a payload-carrying variant
+    // spelled bare), exactly as it is for `constructor_pattern`.
+    //
+    // Not s158's, and not what tree-sitter-wolf#7 asked for â but the
+    // wolf-lang corpus gate reaches this repo's trunk through
+    // wolf-lang's DEFAULT BRANCH, so s157's witness is already failing
+    // here and no s158 work could go green around it.
+    //
+    // A lone identifier is `$.identifier` above; this rule requires the
+    // dot, which separates the two on one token of lookahead with no
+    // conflict declared.
+    path_pattern: $ => field('type', alias($._dotted_path, $.path)),
+
+    _dotted_path: $ => seq($.identifier, repeat1(seq('.', $.identifier))),
 
     tuple_pattern: $ => seq('(', commaSep1($._pattern), ')'),
 
