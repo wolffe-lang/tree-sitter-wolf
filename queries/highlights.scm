@@ -67,7 +67,11 @@
 (trait_item name: (identifier) @type)
 (generic_parameter name: (identifier) @type.parameter)
 (enum_variant name: (identifier) @type.enum.variant)
+(error_item name: (identifier) @type)
 (constructor_pattern type: (path (identifier) @constructor))
+;; s157 ([gram.pat.nullary]) â a payload-less variant paints as the
+;; constructor it is; only the parens are missing.
+(path_pattern type: (path (identifier) @constructor))
 (struct_pattern type: (path (identifier) @type))
 (field_pattern name: (identifier) @variable.other.member)
 (rest_pattern) @operator
@@ -99,7 +103,35 @@
     "int" "uint" "i8" "i16" "i32" "i64" "u8" "u16" "u32" "u64"
     "f32" "f64" "bool" "str" "byte" "char" "wrapping"))
 
+;; `range[int]` / `range[char]` â s158's prelude type ([type.range]).
+;;
+;; Deliberately NOT added to the closed builtin-scalar list above, and
+;; the distinction is upstream's own: wolfc leaves `BUILTIN_TYPES` at
+;; the same seventeen prims and puts `range` in `PRELUDE`, beside
+;; `List` and `channel`, because it takes an argument. It also adds
+;; `PRELUDE_TYPE_ONLY`, whose entire contents is `range`, because the
+;; name resolves in TYPE position only â there is no `range(â¦)`
+;; constructor, a range value being spelled `a..b`.
+;;
+;; So this is scoped to type position, and that scoping is load-bearing
+;; rather than tidy. The `#any-of?` list above is matched against a
+;; bare `(identifier)` in ANY position, which is why `var int = 5`
+;; paints its own binding `@type.builtin` today. `int` is a name almost
+;; nobody binds; `range` is one wolf-lang's corpus binds twice, in
+;; `corpus/os/random_differs.lu` and `corpus/os/random_edges.lu`, both
+;; `var range = true`. Putting it in that list would have coloured
+;; them.
+;;
+;; The path is anchored to a single segment: the prelude name is
+;; one segment, so a user's `foo.range` is untouched.
+((type_path (path . (identifier) @type.builtin .))
+  (#eq? @type.builtin "range"))
+
 (type_path (path (identifier) @type))
+;; `T ! IoErrors` (s158) â the tail names a declared error SET, so the
+;; path is a type reference in type position, not one of the tags a
+;; braced `! {â¦}` row spells with @type.enum.variant.
+(aliased_error_type (path (identifier) @type))
 (dyn_type (path (identifier) @type))
 (trait_bound (path (identifier) @type))
 (region_type) @type.builtin
@@ -192,12 +224,23 @@
   "distinct"
 ] @keyword.storage.modifier
 
+;; `error` is contextual (s158, wolf-lang#36) and joins the group that
+;; declares a named thing, beside `type` and `trait` â the issue asked
+;; only for `@keyword`, and this is that, refined the way every other
+;; item keyword in this file already is.
+;;
+;; Safer here than `then` is: `then` relies on LR state alone, while
+;; this anonymous node comes from an EXTERNAL token that fires only on
+;; `error` IDENT `=`. `error = 4`, `error(x)`, `r.error` and a field
+;; named `error` are `identifier` nodes and no pattern here reaches
+;; them.
 [
   "struct"
   "enum"
   "type"
   "trait"
   "impl"
+  "error"
 ] @keyword.storage.type
 
 [
