@@ -617,6 +617,7 @@ module.exports = grammar({
       $.index_expression,
       $.field_expression,
       $.try_expression,
+      $.list_expression,
       $.parenthesized_expression,
       $.tuple_expression,
       $.unit_expression,
@@ -784,6 +785,26 @@ module.exports = grammar({
     )),
 
     // ------------------------------------- primaries [gram.expr.primary]
+
+    // `[a, b, c]` — s158 (wolf-lang#154), [gram.expr.list].
+    //
+    // The bracket clash with `index_expression` is settled by POSITION
+    // and nothing else ([gram.amb.brackets]): a `[` that BEGINS an
+    // operand opens a literal, a `[` that CONTINUES one is the postfix
+    // subscript. `[10, 20, 30][1]` is both, in that order.
+    //
+    // No conflict is declared and none is needed, but not for the
+    // reason the upstream issue gives — it argues the two rules are
+    // separated by living in `primary` and the postfix chain, and this
+    // grammar has no `primary` node at all (`_expression` is flat, and
+    // `index_expression` takes `field('value', $._expression)`). What
+    // actually separates them is the TERMINATOR: `index_expression`
+    // can only shift its `[` in a state that has an expression on the
+    // stack, and `block`/`source_file` admit a following statement
+    // only after a `_terminator`, so `xs\n[1]` is two statements and
+    // `xs[1]` is one subscript. The newline carries the distinction,
+    // which is why `_newline` is a real token here and not just extra.
+    list_expression: $ => seq('[', commaSep($._expression), ']'),
 
     parenthesized_expression: $ => seq('(', $._expression, ')'),
 

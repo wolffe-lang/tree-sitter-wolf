@@ -697,3 +697,113 @@ fn m() {
               (ERROR
                 (identifier)))
             body: (integer_literal)))))))
+
+==================
+s158: list literals in every position a primary is legal
+==================
+
+fn f() -> !int {
+    let xs = [1, 2, 3]
+    let empty = []
+    let nested = [[1], [2, 3]]
+    g([4, 5], 6)
+    let trailing = [7, 8,]
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (let_declaration
+        (binder
+          (identifier)
+          (list_expression
+            (integer_literal)
+            (integer_literal)
+            (integer_literal))))
+      (let_declaration
+        (binder
+          (identifier)
+          (list_expression)))
+      (let_declaration
+        (binder
+          (identifier)
+          (list_expression
+            (list_expression
+              (integer_literal))
+            (list_expression
+              (integer_literal)
+              (integer_literal)))))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (list_expression
+                (integer_literal)
+                (integer_literal)))
+            (argument
+              (integer_literal)))))
+      (let_declaration
+        (binder
+          (identifier)
+          (list_expression
+            (integer_literal)
+            (integer_literal))))
+      (expression_statement
+        (integer_literal)))))
+
+==================
+s158: position settles the bracket clash, and only position
+==================
+
+fn f() -> !int {
+    let a = [10, 20, 30][1]
+    let b = xs[1..]
+    xs
+    [9]
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (let_declaration
+        (binder
+          (identifier)
+          (index_expression
+            (list_expression
+              (integer_literal)
+              (integer_literal)
+              (integer_literal))
+            (integer_literal))))
+      (let_declaration
+        (binder
+          (identifier)
+          (index_expression
+            (identifier)
+            (range_expression
+              (integer_literal)))))
+      (expression_statement
+        (identifier))
+      (expression_statement
+        (list_expression
+          (integer_literal)))
+      (expression_statement
+        (integer_literal)))))
