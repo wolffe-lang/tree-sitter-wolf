@@ -1,5 +1,91 @@
 # Changelog
 
+## tl04 — 2026-09-12 — s158's three productions, and the gate that was already red
+
+The wolf-lang corpus gate reads wolf-lang's DEFAULT BRANCH, so s157 and
+s158 turned it red here with no push to this repository at all. The
+last recorded green (run 34633743874, 2026-09-11) simply predates them.
+Opening tl04, `script/parse-wolf-corpus.sh` against `c1e62fa` exited 1
+on 13 files: eight `list_lit_*`, four `error_alias_*`, and one nobody
+had filed. It now gates 577 files at zero ERROR nodes, floor ratcheted
+546 → 577.
+
+`primary` gained the list literal (s158, wolf-lang#154):
+`list_lit ::= '[' (expr (',' expr)* ','?)? ']'`. The upstream issue says
+a tree-sitter grammar gets the bracket clash for free because
+`list_lit` lives in `primary` and `index_args` in the postfix chain —
+which is true of the ebnf and not of this grammar, where there is no
+`primary` node and `index_expression` is
+`field('value', $._expression)`. What separates them here is the
+TERMINATOR: `index_expression` can only shift its `[` with an
+expression already on the stack, and a block admits a following
+statement only after a `_terminator`. So `[10, 20, 30][1]` is a literal
+indexed, `xs\n[9]` is two statements, and no conflict is declared —
+the right answer for the wrong stated reason.
+
+`bare_item` gained the error-set alias (s158, wolf-lang#36):
+`error_item ::= 'error' IDENT '=' error_row TERM?`, and because
+`source_file` repeats `_statement` directly, module and statement
+position are one rule here — four `error_item` nodes in the witness,
+three at module level and one in a block, matching wolfc's own
+`error_set_alias_parses_in_a_block_too`.
+
+`error` is contextual, and this is where it parts company with `then`.
+tl01 recorded that `then` needs nothing beyond `word: $ =>
+$.identifier`, because keyword extraction only yields a keyword in
+states that admit it and the one state admitting `then` — after a
+complete `if` condition — admits no identifier at all. Statement start
+admits both `error` and an `expression_statement`'s leading identifier,
+so extraction takes the keyword and the identifier reading dies.
+Measured with a plain `'error'` literal in the rule: `error = 4`,
+`error(error)` and `error.field` each produced an ERROR node, while
+`corpus/rows/error_alias_ident.lu` still passed — that witness puts
+`error` in a field, a function name, a binding and a member, but never
+at statement start, so it cannot catch this. The fix is an external
+token spelling wolfc's own predicate, `Ident("error") Ident '='` and
+nothing shorter. `[gram.inv.kw]`'s fifty are unchanged; the internal
+lexer never learns the word.
+
+`type` gained the brace-less alias tail, `type '!' path` — `T !
+IoErrors` beside `T ! {row}`. Its own node rather than wolfc's shape
+(which lowers both to one `ErrorRow`), because this grammar mirrors the
+ebnf and because the highlighter needs the distinction: the path is a
+type reference in type position, not one of the tags a braced row
+spells.
+
+`closed_pattern` gained the bare dotted path (s157, wolf-lang#162,
+`[gram.pat.nullary]`) — `Color.Red` without the parens, so a `match`
+over a closed set of names can be spelled. Not s158's and not what
+tree-sitter-wolf#7 asked for, but `match_nullary_variant.lu` was the
+gate's last ERROR and no s158 work could go green around it.
+`Color.Blue(shade)` is still `constructor_pattern`, a lone `none` is
+still `identifier`.
+
+`range` needed no production at all: `range[int]` already parsed as
+`path type_args?`. It did NOT join the closed builtin-scalar list, and
+that is upstream's own distinction — wolfc leaves `BUILTIN_TYPES` at
+the same seventeen prims and puts `range` in `PRELUDE` beside `List`
+and `channel`, because it takes an argument, then adds
+`PRELUDE_TYPE_ONLY` whose entire contents is `range`, because the name
+resolves in type position only. The scoping is load-bearing, not tidy:
+that `#any-of?` list matches a bare `(identifier)` in ANY position,
+which is why `var int = 5` paints its own binding `@type.builtin`
+today. `int` is a name almost nobody binds; `range` is one wolf-lang's
+corpus binds twice. Measured across the seven files: the 6 `range`
+identifier nodes in type position across `range_type_{param,return,
+inclusive,char,overflow}.lu` all paint `@type.builtin`, and the 7 in
+`random_differs.lu` and `random_edges.lu` — `var range = true` — paint
+none.
+
+One bug the corpus tests could not have caught. The keyword's first
+capture came back zero-width, `(0,5)`–`(0,5)` with empty text:
+`ts_lexer__advance` assigns `token_start_position` on every skip=true
+call, unconditionally and after `mark_end` has already run, so skipping
+the trailing whitespace dragged the token's start to its end. The
+corpus s-expression format prints neither anonymous nodes nor extents,
+so `tree-sitter test` was green throughout; only `tree-sitter query`
+showed it. The lookahead now advances with skip=false.
+
 ## tl01 — 2026-09-11 — the v0.2.11 re-vendor: four syntax deltas, one of them not in the ebnf
 
 Five releases since the last vendor (`v0.2.6..v0.2.11`): 1183 added
