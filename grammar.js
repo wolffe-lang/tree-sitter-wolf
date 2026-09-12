@@ -480,6 +480,7 @@ module.exports = grammar({
       $.type_path,
       $.error_union_type,
       $.rowed_type,
+      $.aliased_error_type,
       $.prefixed_type,
       $.pointer_type,
       $.dyn_type,
@@ -500,6 +501,15 @@ module.exports = grammar({
     // `T ! {row}` — postfix row, first-class in every type position;
     // nested rows flatten ([gram.type.row.flatten], D51).
     rowed_type: $ => prec.left(2, seq($._type, '!', $.error_row)),
+
+    // `T ! IoErrors` â s158 (wolf-lang#36), the brace-less tail that
+    // names an error set declared by an `error_item`. The ebnf gives it
+    // its own alternative (`type '!' path`) beside `type '!' error_row`,
+    // and this grammar mirrors the ebnf rather than wolfc's tree, which
+    // lowers both to one `ErrorRow`. A distinct node is also what the
+    // highlighter needs: the path here is a TYPE reference in type
+    // position, not one of the tags a bare `! {â¦}` row entry spells.
+    aliased_error_type: $ => prec.left(2, seq($._type, '!', $.path)),
 
     error_row: $ => seq(
       '{',

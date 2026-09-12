@@ -1,5 +1,68 @@
 [
   {
+    "type": "aliased_error_type",
+    "named": true,
+    "fields": {},
+    "children": {
+      "multiple": true,
+      "required": true,
+      "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
+          "type": "dyn_type",
+          "named": true
+        },
+        {
+          "type": "error_union_type",
+          "named": true
+        },
+        {
+          "type": "function_type",
+          "named": true
+        },
+        {
+          "type": "path",
+          "named": true
+        },
+        {
+          "type": "pointer_type",
+          "named": true
+        },
+        {
+          "type": "prefixed_type",
+          "named": true
+        },
+        {
+          "type": "region_type",
+          "named": true
+        },
+        {
+          "type": "rowed_type",
+          "named": true
+        },
+        {
+          "type": "tuple_type",
+          "named": true
+        },
+        {
+          "type": "type_keyword",
+          "named": true
+        },
+        {
+          "type": "type_path",
+          "named": true
+        },
+        {
+          "type": "unit_type",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
     "type": "argument",
     "named": true,
     "fields": {},
@@ -1786,6 +1849,10 @@
         "required": false,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -2913,6 +2980,10 @@
         "required": true,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -3367,6 +3438,10 @@
         "required": false,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -3457,6 +3532,10 @@
         "multiple": false,
         "required": false,
         "types": [
+          {
+            "type": "aliased_error_type",
+            "named": true
+          },
           {
             "type": "dyn_type",
             "named": true
@@ -4757,6 +4836,10 @@
       "required": false,
       "types": [
         {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
           "type": "dyn_type",
           "named": true
         },
@@ -4885,6 +4968,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
         {
           "type": "dyn_type",
           "named": true
@@ -5145,6 +5232,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "aliased_error_type",
+            "named": true
+          },
           {
             "type": "dyn_type",
             "named": true
@@ -6260,6 +6351,10 @@
         "required": false,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -6358,6 +6453,10 @@
       "multiple": true,
       "required": false,
       "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
         {
           "type": "dyn_type",
           "named": true
@@ -7059,6 +7158,10 @@
         "required": false,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -7108,6 +7211,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "aliased_error_type",
+            "named": true
+          },
           {
             "type": "dyn_type",
             "named": true
@@ -9266,6 +9373,10 @@
         "required": true,
         "types": [
           {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
             "type": "dyn_type",
             "named": true
           },
@@ -9562,6 +9673,10 @@
       "required": true,
       "types": [
         {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
           "type": "dyn_type",
           "named": true
         },
@@ -9639,6 +9754,10 @@
       "multiple": false,
       "required": true,
       "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
         {
           "type": "dyn_type",
           "named": true
@@ -10622,6 +10741,10 @@
       "required": false,
       "types": [
         {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
           "type": "dyn_type",
           "named": true
         },
@@ -10868,6 +10991,10 @@
       "required": true,
       "types": [
         {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
           "type": "dyn_type",
           "named": true
         },
@@ -10926,6 +11053,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
         {
           "type": "dyn_type",
           "named": true
@@ -12498,6 +12629,10 @@
       "required": true,
       "types": [
         {
+          "type": "aliased_error_type",
+          "named": true
+        },
+        {
           "type": "dyn_type",
           "named": true
         },
@@ -12552,6 +12687,10 @@
       "multiple": true,
       "required": true,
       "types": [
+        {
+          "type": "aliased_error_type",
+          "named": true
+        },
         {
           "type": "asm_expression",
           "named": true
@@ -12787,6 +12926,10 @@
         "multiple": false,
         "required": true,
         "types": [
+          {
+            "type": "aliased_error_type",
+            "named": true
+          },
           {
             "type": "dyn_type",
             "named": true

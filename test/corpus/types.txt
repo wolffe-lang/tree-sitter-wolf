@@ -393,3 +393,85 @@ fn shuffle[N: type](b: Buf[N + 1]) -> Buf[1 + N] {
     (block
       (expression_statement
         (identifier)))))
+
+==================
+s158: the brace-less alias tail is a type reference, not a tag
+==================
+
+error IoErrors = {none, parse}
+
+fn spelled(ok: bool) -> int ! {none, parse} { 1 }
+
+fn aliased(ok: bool) -> int ! IoErrors { 1 }
+
+fn param(e: str ! IoErrors) -> !int { 0 }
+
+---
+
+(source_file
+  (error_item
+    (identifier)
+    (error_row
+      (row_entry
+        (path
+          (identifier)))
+      (row_entry
+        (path
+          (identifier)))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (rowed_type
+      (type_path
+        (path
+          (identifier)))
+      (error_row
+        (row_entry
+          (path
+            (identifier)))
+        (row_entry
+          (path
+            (identifier)))))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (aliased_error_type
+      (type_path
+        (path
+          (identifier)))
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (aliased_error_type
+          (type_path
+            (path
+              (identifier)))
+          (path
+            (identifier)))))
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (expression_statement
+        (integer_literal)))))
