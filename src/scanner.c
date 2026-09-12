@@ -260,26 +260,37 @@ static bool scan_error_item_keyword(TSLexer *lexer) {
   if (is_word_byte(lexer->lookahead)) return false;
   lexer->mark_end(lexer);
 
+  // Everything past here is LOOKAHEAD and advances with skip=false, not
+  // skip=true. `ts_lexer__advance` assigns `token_start_position` on
+  // every skip=true call, unconditionally and regardless of `mark_end`
+  // having already run â so skipping the trailing whitespace here drags
+  // the token's START forward to its END. Measured before this comment
+  // existed: the keyword highlighted as a zero-width capture at column
+  // 5 with empty text, which `tree-sitter test` cannot see (the corpus
+  // s-expression format prints neither anonymous nodes nor extents) and
+  // only `tree-sitter query` showed. skip=false leaves the start alone;
+  // `mark_end` already fixed the end at the `r`.
+
   // Lookahead 1: a NAME.
   while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
          lexer->lookahead == '\r') {
-    lexer->advance(lexer, true);
+    lexer->advance(lexer, false);
   }
   int32_t c = lexer->lookahead;
   if (!(c == '_' || (c >= 'a' && c <= 'z') || (c >= 'A' && c <= 'Z') ||
         c >= 0x80)) {
     return false;
   }
-  while (is_word_byte(lexer->lookahead)) lexer->advance(lexer, true);
+  while (is_word_byte(lexer->lookahead)) lexer->advance(lexer, false);
 
   // Lookahead 2: a single `=`. `==` is the comparison operator, so
   // `error Name == x` is an expression and not an item.
   while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
          lexer->lookahead == '\r') {
-    lexer->advance(lexer, true);
+    lexer->advance(lexer, false);
   }
   if (lexer->lookahead != '=') return false;
-  lexer->advance(lexer, true);
+  lexer->advance(lexer, false);
   if (lexer->lookahead == '=') return false;
 
   lexer->result_symbol = ERROR_ITEM_KEYWORD;
