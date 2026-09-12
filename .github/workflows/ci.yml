@@ -2,6 +2,38 @@ name: CI
 on:
   push: {branches: [trunk]}
   pull_request:
+  # Gate 4 below reads wolf-lang's DEFAULT BRANCH, so this repository's
+  # CI can go red with no commit here at all — and did (#9): s157 and
+  # s158 broke thirteen corpus files while the run list still said
+  # green, because the only thing that runs the gate is a push. A push
+  # is the wrong trigger for a gate whose input lives in another repo.
+  #
+  # Daily, at 06:17 UTC. Measured cost: the `gate` job's last twelve
+  # runs took 122–340s, median 170s (run 34677185673 = 168s), so a
+  # daily fire is ~20 min of ubuntu-latest a week, ~17h a year, billed
+  # at $0 while this repository is public. Weekly was the cheaper
+  # option and was rejected: wolf-lang lands surface sprints several
+  # times a *day* during a wave, so a week's cadence routinely reports
+  # a break a whole wave after the lane that could have fixed it has
+  # closed. Daily buys a ~24h worst case for ~3 minutes a day.
+  #
+  # CAVEAT, and it is this issue wearing a different hat: GitHub
+  # DISABLES scheduled workflows in a public repository after 60 days
+  # with no repository activity, and mails the maintainer once. A repo
+  # nobody pushes to is exactly the repo that hits 60 days. If the
+  # scheduled runs stop appearing in the run list, that is why, and
+  # the fix is the button on the Actions tab (or a push).
+  schedule:
+    - cron: '17 6 * * *'
+  # Manual fire, so the mechanism can be tested without waiting a day.
+  workflow_dispatch:
+  # Receiver for the more precise alternative weighed in #9: wolf-lang
+  # can POST a `wolf-lang-corpus` dispatch on merges that touch
+  # `spec/grammar.ebnf` or `corpus/` and get a minutes-later answer
+  # instead of a next-morning one. Wiring the sender is wolf-lang's
+  # side and is not done; this end costs nothing until it is.
+  repository_dispatch:
+    types: [wolf-lang-corpus]
 jobs:
   gate:
     runs-on: ubuntu-latest
@@ -48,3 +80,52 @@ jobs:
 
       - name: wolf-lang corpus at zero ERRORs
         run: TREE_SITTER="npx tree-sitter" sh script/parse-wolf-corpus.sh .wolf-lang/corpus
+
+  # A red that nobody is looking at is not a gate either. The scheduled
+  # fire above runs when no human is watching by construction, so the
+  # red has to come and find one: this job opens an issue (or comments
+  # on the one already open) naming the run.
+  #
+  # Deliberately NOT run for `pull_request` or `push`: those reds
+  # already have a human attached to them, and filing an issue for
+  # every red PR would train everyone to ignore the label.
+  #
+  # Idempotent: one issue per outage, not one per day. It searches for
+  # an open issue carrying the marker below and comments if it finds
+  # one, so a break that stays broken for a week is one thread with
+  # seven comments, and closing the issue by hand is what resets it.
+  notify:
+    needs: gate
+    if: >-
+      failure() && (
+        github.event_name == 'schedule' ||
+        github.event_name == 'repository_dispatch' ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: open or update the red-CI issue
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          EVENT: ${{ github.event_name }}
+          REPO: ${{ github.repository }}
+        run: |
+          set -eu
+          # The marker is the search key; keep it verbatim in the title.
+          MARKER='unattended CI run is red'
+          BODY=$(printf '%s\n\n- run: %s\n- trigger: `%s`\n- gated input: wolf-lang default branch (this repo may have had no commits)\n\nThe corpus gate reads wolf-lang'"'"'s default branch, so the likely cause is an upstream surface change this grammar has not mirrored yet. `script/parse-wolf-corpus.sh` names the failing files in the run log.\n' \
+            "The $EVENT run of CI failed on $REPO." "$RUN_URL" "$EVENT")
+          existing=$(gh issue list --repo "$REPO" --state open \
+            --search "in:title \"$MARKER\"" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            echo "commenting on existing #$existing"
+            gh issue comment "$existing" --repo "$REPO" --body "$BODY"
+          else
+            echo "opening a new issue"
+            gh issue create --repo "$REPO" \
+              --title "CI: $MARKER ($(date -u +%Y-%m-%d))" \
+              --body "$BODY"
+          fi
