@@ -1,5 +1,41 @@
 # Changelog
 
+## tl08 — 2026-09-15 — the floor at v0.2.14, and the alarm before the schedule sleeps
+
+**#14, the ratchet.** wolf-lang `v0.2.14` (`30731a6`, trunk at the time)
+moves no grammar: `git diff c1e62fa v0.2.14 -- spec/grammar.ebnf
+spec/01-grammar.md` is empty, so the external scanner pays nothing. The
+corpus grew seven files (s159/s160's witnesses) to 615 `.lu`, of which 31
+are parse-tier counter-examples, and the gate parses the other 584 at zero
+ERROR nodes. The floor ratchets 577 → 584. Witnessed at the boundary
+locally (FLOOR=584 passes, FLOOR=585 fails "checkout suspect") and in CI
+at run 35021366541: `PASS: zero ERROR nodes across the corpus (584 files,
+floor 584)`.
+
+**#12, the schedule that sleeps.** GitHub disables a public repository's
+scheduled workflows after 60 days without activity, and a schedule that
+never runs never goes red. The two keepalive shapes, a bot commit and a
+scheduled call to the REST `enable` endpoint, both exist to defeat that
+timer. The second was the default mode of gautamkrishnar/keepalive-workflow
+v2, which GitHub Staff disabled for a terms-of-service violation. So
+`ci.yml` gains `sleep-alarm` instead. On every scheduled or manual run it
+reads the default branch's last commit date and each workflow's `state`
+from the API. At 45 days it goes red and opens one issue (marker `scheduled
+gate will sleep`) naming the date the schedule sleeps. It changes no
+workflow state and writes nothing to git. Proven on branch `tl08`: run
+35021366541 is quiet at 45 (`3 day(s) ago … quiet: 42 day(s) before the
+alarm`), and run 35021377856, planted at `sleep_warn_days=0`, is red at
+`sleep-alarm` alone and opened #15, closed by hand as planted.
+
+**#13's receiver meets a sender.** wolf-lang's `release.yml` gains the
+`wolf-lang-corpus` dispatch on tags that move the grammar or corpus
+(wolf-lang PR, branch `tl08-dispatch`). A local run of that step at
+`v0.2.14` started run 35021950744 here, event `repository_dispatch`.
+
+Also: eight double-encoded UTF-8 sequences (em dashes, one ellipsis) in
+tl04's comments in `grammar.js` and `script/parse-wolf-corpus.sh` are
+repaired. `tree-sitter generate` leaves `src/` byte-identical.
+
 ## tl04 — 2026-09-12 — s158's three productions, and the gate that was already red
 
 The wolf-lang corpus gate reads wolf-lang's DEFAULT BRANCH, so s157 and

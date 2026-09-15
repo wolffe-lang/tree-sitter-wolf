@@ -49,22 +49,31 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # gates 541 of 570: trunk carries five more files than v0.2.11.
 #
 # Re-measured 577 at trunk c1e62fa (2026-09-12, tl04, the s157/s158
-# surface) â 608 `.lu` files, 31 parse-tier counter-examples excluded,
+# surface) — 608 `.lu` files, 31 parse-tier counter-examples excluded,
 # zero ERROR nodes. The corpus grew 33 files; the two new exclusions are
 # s158's `list_lit_untyped_empty` (E0419) and `error_alias_open` (E0201).
 # Worth knowing what this run cost: the gate reads wolf-lang's default
 # branch, so s157 and s158 turned it red here with no push to this repo
 # at all. The last recorded green (run 34633743874, 2026-09-11) simply
-# predates them. Thirteen files were failing when tl04 opened â eight
+# predates them. Thirteen files were failing when tl04 opened — eight
 # `list_lit_*`, four `error_alias_*`, and s157's `match_nullary_variant`,
 # which belongs to no issue this repo had filed.
+#
+# Re-measured 584 at trunk 30731a6 = v0.2.14 (2026-09-15, tl08,
+# tree-sitter-wolf#14) — 615 `.lu` files, the same 31 parse-tier
+# counter-examples excluded, zero ERROR nodes. The corpus grew seven
+# files (s159/s160's witnesses) and the grammar none: `git diff c1e62fa
+# v0.2.14 -- spec/grammar.ebnf spec/01-grammar.md` is empty, so no
+# production moved and the external scanner paid nothing. Witnessed at
+# the boundary locally: FLOOR=584 passes, FLOOR=585 fails "checkout
+# suspect" on the same 584 files.
 #
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-577}"
+FLOOR="${FLOOR:-584}"
 
 total=0
 skipped=0
