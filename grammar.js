@@ -502,13 +502,13 @@ module.exports = grammar({
     // nested rows flatten ([gram.type.row.flatten], D51).
     rowed_type: $ => prec.left(2, seq($._type, '!', $.error_row)),
 
-    // `T ! IoErrors` â s158 (wolf-lang#36), the brace-less tail that
+    // `T ! IoErrors` — s158 (wolf-lang#36), the brace-less tail that
     // names an error set declared by an `error_item`. The ebnf gives it
     // its own alternative (`type '!' path`) beside `type '!' error_row`,
     // and this grammar mirrors the ebnf rather than wolfc's tree, which
     // lowers both to one `ErrorRow`. A distinct node is also what the
     // highlighter needs: the path here is a TYPE reference in type
-    // position, not one of the tags a bare `! {â¦}` row entry spells.
+    // position, not one of the tags a bare `! {…}` row entry spells.
     aliased_error_type: $ => prec.left(2, seq($._type, '!', $.path)),
 
     error_row: $ => seq(
@@ -595,16 +595,16 @@ module.exports = grammar({
 
     negative_literal: $ => seq('-', choice($.integer_literal, $.float_literal)),
 
-    // `Color.Red` â s157 (wolf-lang#162), [gram.pat.nullary]: a bare
+    // `Color.Red` — s157 (wolf-lang#162), [gram.pat.nullary]: a bare
     // dotted path is a pattern. Until that pin the parser demanded the
-    // parens, so a `match` over a CLOSED SET OF NAMES â the thing an
-    // enum is reached for â could not be spelled at all, and
+    // parens, so a `match` over a CLOSED SET OF NAMES — the thing an
+    // enum is reached for — could not be spelled at all, and
     // exhaustiveness had nothing to be exhaustive over. Payload-less
     // ROW tags take the same bare form. Arity stays the checker's
     // question either way (E0808 for a payload-carrying variant
     // spelled bare), exactly as it is for `constructor_pattern`.
     //
-    // Not s158's, and not what tree-sitter-wolf#7 asked for â but the
+    // Not s158's, and not what tree-sitter-wolf#7 asked for — but the
     // wolf-lang corpus gate reaches this repo's trunk through
     // wolf-lang's DEFAULT BRANCH, so s157's witness is already failing
     // here and no s158 work could go green around it.
