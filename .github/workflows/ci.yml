@@ -17,16 +17,24 @@ on:
   # a break a whole wave after the lane that could have fixed it has
   # closed. Daily buys a ~24h worst case for ~3 minutes a day.
   #
-  # CAVEAT, and it is this issue wearing a different hat: GitHub
-  # DISABLES scheduled workflows in a public repository after 60 days
-  # with no repository activity, and mails the maintainer once. A repo
-  # nobody pushes to is exactly the repo that hits 60 days. If the
-  # scheduled runs stop appearing in the run list, that is why, and
-  # the fix is the button on the Actions tab (or a push).
+  # CAVEAT (#12): GitHub DISABLES scheduled workflows in a public
+  # repository after 60 days with no repository activity. A repo nobody
+  # pushes to is exactly the repo that hits 60 days, and a disabled
+  # schedule shows no red — the runs just stop. The `sleep-alarm` job
+  # below is the answer, and why it is an alarm and not a keepalive is
+  # written there.
   schedule:
     - cron: '17 6 * * *'
   # Manual fire, so the mechanism can be tested without waiting a day.
   workflow_dispatch:
+    inputs:
+      sleep_warn_days:
+        description: >-
+          Days of trunk inactivity at which `sleep-alarm` goes red. Leave
+          at 45. Set 0 only to prove the alarm still REDS (#12).
+        type: string
+        default: '45'
+        required: false
   # Receiver for the more precise alternative weighed in #9: wolf-lang
   # can POST a `wolf-lang-corpus` dispatch on merges that touch
   # `spec/grammar.ebnf` or `corpus/` and get a minutes-later answer
@@ -80,6 +88,79 @@ jobs:
 
       - name: wolf-lang corpus at zero ERRORs
         run: TREE_SITTER="npx tree-sitter" sh script/parse-wolf-corpus.sh .wolf-lang/corpus
+
+  # The schedule above SLEEPS after 60 days without repository activity
+  # (#12), and a sleeping schedule is silent: no run, so no red, so no
+  # `notify`. This job is the red that comes before the silence.
+  #
+  # Why an alarm and not a keepalive. The two keepalive shapes are a bot
+  # commit on a cron, and a scheduled step calling the REST `enable`
+  # endpoint on its own workflow so the timer never fires. The first
+  # writes noise into a mirror's history. The second was the DEFAULT
+  # mode of gautamkrishnar/keepalive-workflow v2, and GitHub Staff
+  # disabled that repository for a terms-of-service violation; the
+  # reason reported downstream (ddev/github-action-add-on-test#46) is
+  # that it circumvented the 60-day inactivity policy. Both shapes exist
+  # to defeat the timer, so both put this org's Actions at risk for a
+  # daily corpus check. The timer is GitHub's to run. What this repo
+  # owes is that nobody is SURPRISED by it.
+  #
+  # So: every scheduled run reads the default branch's last commit date
+  # and, at 45 days (15 daily runs before the 60-day cliff), goes red
+  # and opens one issue naming the date the schedule sleeps. A human
+  # then chooses: land something real, or let it sleep and press
+  # "Enable workflow" (`gh workflow enable ci.yml`) when wanted. It
+  # changes no workflow state and writes nothing to git.
+  #
+  # "Activity" is not defined by GitHub's docs. The last trunk COMMIT is
+  # the conservative reading: a commit is certainly activity, and a
+  # fast-forwarded commit's committer date predates its push, so the
+  # alarm can only fire early, never late. The run log also prints each
+  # workflow's `state` from the API, so the log says whether the
+  # platform already put one to sleep.
+  sleep-alarm:
+    if: github.event_name == 'schedule' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      issues: write
+    steps:
+      - name: days until the schedule sleeps
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          REPO: ${{ github.repository }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          WARN_DAYS: ${{ inputs.sleep_warn_days || '45' }}
+        run: |
+          set -eu
+          case "$WARN_DAYS" in ''|*[!0-9]*) echo "::error::sleep_warn_days must be a whole number, got '$WARN_DAYS'"; exit 2 ;; esac
+          branch=$(gh api "repos/$REPO" --jq .default_branch)
+          last=$(gh api "repos/$REPO/commits?sha=$branch&per_page=1" --jq '.[0].commit.committer.date')
+          test -n "$last"
+          last_s=$(date -u -d "$last" +%s)
+          age=$(( ( $(date -u +%s) - last_s ) / 86400 ))
+          sleeps=$(date -u -d "@$(( last_s + 60 * 86400 ))" +%Y-%m-%d)
+          echo "workflow states (API):"
+          gh api "repos/$REPO/actions/workflows" --jq '.workflows[] | "  \(.path)  \(.state)"'
+          echo "last $branch commit: $last ($age day(s) ago); schedules sleep on or after $sleeps; alarm at $WARN_DAYS day(s)"
+          if [ "$age" -lt "$WARN_DAYS" ]; then
+            echo "quiet: $(( WARN_DAYS - age )) day(s) before the alarm"
+            exit 0
+          fi
+          MARKER='scheduled gate will sleep'
+          BODY=$(printf '%s\n\n- run: %s\n- last `%s` commit: %s (%s days ago)\n- alarm threshold: %s days\n\nGitHub disables this repository'"'"'s scheduled workflows after 60 days without activity, and a disabled schedule never runs, so it never goes red (#12). Either land a real change on `%s`, or let the schedule sleep and re-enable it with `gh workflow enable ci.yml --repo %s` when it is wanted again. No bot keeps it awake, on purpose: see the `sleep-alarm` comment in `.github/workflows/ci.yml`.\n' \
+            "The scheduled corpus gate sleeps on or after $sleeps." "$RUN_URL" "$branch" "$last" "$age" "$WARN_DAYS" "$branch" "$REPO")
+          existing=$(gh issue list --repo "$REPO" --state open \
+            --search "in:title \"$MARKER\"" --json number --jq '.[0].number // empty')
+          if [ -n "$existing" ]; then
+            gh issue comment "$existing" --repo "$REPO" --body "$BODY"
+          else
+            gh issue create --repo "$REPO" \
+              --title "CI: $MARKER on or after $sleeps" --body "$BODY"
+          fi
+          echo "::error::$age day(s) since the last $branch commit; the schedule sleeps on or after $sleeps"
+          exit 1
 
   # A red that nobody is looking at is not a gate either. The scheduled
   # fire above runs when no human is watching by construction, so the
