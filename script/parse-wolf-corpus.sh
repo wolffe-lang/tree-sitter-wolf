@@ -59,12 +59,21 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # `list_lit_*`, four `error_alias_*`, and s157's `match_nullary_variant`,
 # which belongs to no issue this repo had filed.
 #
+# Re-measured 584 at trunk 30731a6 = v0.2.14 (2026-09-15, tl08,
+# tree-sitter-wolf#14) — 615 `.lu` files, the same 31 parse-tier
+# counter-examples excluded, zero ERROR nodes. The corpus grew seven
+# files (s159/s160's witnesses) and the grammar none: `git diff c1e62fa
+# v0.2.14 -- spec/grammar.ebnf spec/01-grammar.md` is empty, so no
+# production moved and the external scanner paid nothing. Witnessed at
+# the boundary locally: FLOOR=584 passes, FLOOR=585 fails "checkout
+# suspect" on the same 584 files.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-577}"
+FLOOR="${FLOOR:-584}"
 
 total=0
 skipped=0
