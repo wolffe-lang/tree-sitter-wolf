@@ -36,10 +36,39 @@ on:
         default: '45'
         required: false
   # Receiver for the more precise alternative weighed in #9: wolf-lang
-  # can POST a `wolf-lang-corpus` dispatch on merges that touch
-  # `spec/grammar.ebnf` or `corpus/` and get a minutes-later answer
-  # instead of a next-morning one. Wiring the sender is wolf-lang's
-  # side and is not done; this end costs nothing until it is.
+  # POSTs a `wolf-lang-corpus` dispatch at RELEASE time when the tag
+  # moved `spec/grammar.ebnf`, `spec/01-grammar.md` or `corpus/` since
+  # the previous tag, and this end answers in minutes instead of next
+  # morning.
+  #
+  # THE SENDER EXISTS AND HAS RUN FOR REAL (#13). It is the
+  # `grammar-mirror` job in wolf-lang's `release.yml`, authenticated by a
+  # fine-grained `TREE_SITTER_WOLF_DISPATCH_TOKEN` scoped to this
+  # repository alone — Contents read+write for the dispatches endpoint (a
+  # classic token would need the whole `repo` scope), plus Actions read,
+  # so the sender's log can name the run it started.
+  #
+  # Two firings so far, and the difference between them is the point:
+  #
+  #   * 2026-09-15T20:49Z, run 35021950744 — tl08's REHEARSAL, dispatched
+  #     by hand to prove the receiver wakes. 584 files gated, 3m13s.
+  #   * 2026-09-17T11:02Z, run 35213581814 — the FIRST REAL one, fired by
+  #     the `v0.2.15` tag 12 seconds after the release workflow started.
+  #     The sender's log reads "since v0.2.14: 73 file(s) moved under
+  #     spec/grammar.ebnf, spec/01-grammar.md, corpus/", then "dispatched
+  #     wolf-lang-corpus to wolffe-lang/tree-sitter-wolf for v0.2.15
+  #     (2e4ca769...)", then "receiver run: .../actions/runs/35213581814"
+  #     — so the POST was accepted AND the run it started was visible to
+  #     the sender within 20 s. Here: all four gates green, 634 files
+  #     gated, 32 counter-examples excluded, 3m23s.
+  #
+  # READ THE DURATION, NOT THE COLOUR. The sender SKIPS LOUDLY AND STAYS
+  # GREEN when the secret is absent, so a green `grammar-mirror` job is
+  # not evidence that anything was dispatched; the evidence is the
+  # "dispatched ..." line in its log plus a `repository_dispatch` run
+  # here. And on this side a `gate` job that returns in seconds has not
+  # run the corpus: the twelve runs #9 measured took 122-340s, median
+  # 170s, and both dispatch-triggered runs sit inside that band.
   repository_dispatch:
     types: [wolf-lang-corpus]
 jobs:
