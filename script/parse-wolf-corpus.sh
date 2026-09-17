@@ -68,12 +68,43 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # the boundary locally: FLOOR=584 passes, FLOOR=585 fails "checkout
 # suspect" on the same 584 files.
 #
+# Re-measured 640 at trunk 6d2aa72 (2026-09-17, tl09, the v0.2.15 pin) —
+# 672 `.lu` files, 32 parse-tier counter-examples excluded, zero ERROR
+# nodes. TWO numbers exist at this bump and the floor takes the larger
+# for the reason the paragraph below gives: the TAG `v0.2.15`
+# (`2e4ca769`) gates **634** of 666, and trunk, six files further on,
+# gates **640** of 672. The gate reads the DEFAULT BRANCH, so trunk is
+# the number it will meet; 634 is recorded beside it because 634 is what
+# the release-day dispatch actually ran (run 35213581814 and the 11:40
+# schedule both printed "634 files gated, 32 parse-tier counter-examples
+# excluded"). Witnessed at both boundaries locally: FLOOR=634 passes and
+# FLOOR=635 fails at the tag, FLOOR=640 passes and FLOOR=641 fails at
+# trunk.
+#
+# THE GRAMMAR MOVED AT THIS BUMP AND COST THIS REPOSITORY NOTHING, which
+# is a measurement and not a shrug. `spec/grammar.ebnf` is +5 −2 over
+# `v0.2.14..v0.2.15`: s163 paid wolf-lang#28's debt and wrote `FORMAT_SPEC`
+# out as a real production — `FMT_FILL`, `FMT_ALIGN` and `FMT_TYPE` under
+# the new `[type.interp.spec]` anchor — where it had been a comment
+# citing a `spec §7.4` that never existed. `grammar.js` already models
+# the whole of it permissively (`format_spec: ':' repeat1(choice(...))`,
+# with `[gram.amb.fmtcolon]`'s rule that the first top-level `:` starts
+# the spec and interpolations may nest inside it), so the written-out
+# EBNF names what this mirror already accepted: zero productions changed,
+# zero external-scanner work, `tree-sitter generate` reproduces `src/`
+# byte-identically. Measured directly as well as by the corpus, on a
+# fixture spelling every `FMT_TYPE` letter and every `FMT_ALIGN` form
+# plus fill, sign, zero-pad, width, precision, a nested `{n:>{w}}` and a
+# bare `{n:}` — zero ERROR nodes, against a negative control (`"{n:>8"`,
+# an unterminated interpolation) that does produce them, so the check can
+# still red.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-584}"
+FLOOR="${FLOOR:-640}"
 
 total=0
 skipped=0
