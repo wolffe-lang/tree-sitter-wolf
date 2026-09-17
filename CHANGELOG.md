@@ -1,5 +1,60 @@
 # Changelog
 
+## tl09 — 2026-09-17 — the floor at v0.2.15, and the dispatch that fired for real
+
+**The floor ratchets 584 → 640.** Two numbers exist at this bump and the
+floor takes the larger. The tag `v0.2.15` (`2e4ca769`) carries 666 `.lu`
+files, 32 of them parse-tier counter-examples, and the gate parses the
+other **634** at zero ERROR nodes; current trunk (`6d2aa72`) is six files
+further on, 672 `.lu`, the same 32 excluded, and gates **640**. The gate
+checks out wolf-lang's DEFAULT BRANCH, so trunk is the number it will meet
+and 640 is the floor; 634 is recorded beside it in
+`script/parse-wolf-corpus.sh` because 634 is what the release-day run
+actually printed. Witnessed at both boundaries locally: FLOOR=634 passes
+and FLOOR=635 fails "checkout suspect" at the tag, FLOOR=640 passes and
+FLOOR=641 fails at trunk.
+
+**The grammar moved and cost this repository nothing, measured.** Unlike
+`v0.2.14`, this release DOES move `spec/grammar.ebnf`: +5 −2 in one hunk,
+where s163 paid wolf-lang#28's debt and wrote `FORMAT_SPEC` out as a real
+production — `FMT_FILL`, `FMT_ALIGN` and `FMT_TYPE` under the new
+`[type.interp.spec]` anchor — replacing a comment that cited a `spec §7.4`
+which never existed. `grammar.js` already models the whole of it
+permissively (`format_spec: ':' repeat1(choice(…))`, with
+`[gram.amb.fmtcolon]`'s first-top-level-colon rule and nested
+interpolations), so the written-out EBNF names what this mirror already
+accepted: zero productions changed, zero external-scanner work,
+`tree-sitter generate` reproduces `src/` byte-identically. Measured
+directly as well as through the corpus, on a fixture spelling every
+`FMT_TYPE` letter and every `FMT_ALIGN` form plus fill, sign, zero-pad,
+width, precision, a nested `{n:>{w}}` and a bare `{n:}` — zero ERROR
+nodes, against a negative control (`"{n:>8"`, unterminated) that does
+produce them, so the check can still red.
+
+**#13's dispatch fired for real, and the log is the evidence — not the
+colour.** tl08 wired the sender into wolf-lang's `release.yml` and proved
+the receiver wakes by dispatching one by hand (run 35021950744,
+2026-09-15, 584 files, 3m13s). At `v0.2.15` it fired on its own: the
+`grammar-mirror` job started 12 s after the release workflow, logged
+`since v0.2.14: 73 file(s) moved under spec/grammar.ebnf,
+spec/01-grammar.md, corpus/`, then `dispatched wolf-lang-corpus to
+wolffe-lang/tree-sitter-wolf for v0.2.15 (2e4ca769…)`, then `receiver run:
+…/actions/runs/35213581814` — POST accepted and the receiver visible to
+the sender within 20 s. Run 35213581814 here ran all four gates green in
+3m23s: `PASS: zero ERROR nodes across the corpus (634 files, floor 584)`.
+
+The token is alive and is `TREE_SITTER_WOLF_DISPATCH_TOKEN` — a
+fine-grained token scoped to this repository alone, Contents read+write
+for the dispatches endpoint and Actions read so the sender can name the
+run it started. Both scopes are proven by the log rather than assumed: the
+`dispatched …` line requires the write half, and the `receiver run: …`
+line requires the read half. **The sender SKIPS LOUDLY AND STAYS GREEN
+when the secret is absent**, so a green `grammar-mirror` job is not
+evidence that anything was dispatched; `ci.yml`'s receiver comment now
+says so, together with the reminder that a `gate` job returning in seconds
+has not run the corpus — #9 measured 122–340 s, median 170 s, and both
+dispatch-triggered runs sit inside that band.
+
 ## tl08 — 2026-09-15 — the floor at v0.2.14, and the alarm before the schedule sleeps
 
 **#14, the ratchet.** wolf-lang `v0.2.14` (`30731a6`, trunk at the time)
