@@ -99,12 +99,47 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # an unterminated interpolation) that does produce them, so the check can
 # still red.
 #
+# Re-measured 658 at trunk = v0.2.16 = `93a5fe50` (2026-09-24, tl11, the
+# 0.2.16 pin) — 690 `.lu` files, 32 parse-tier counter-examples excluded,
+# zero ERROR nodes. ONE number this time, not two: wolf-lang's default
+# branch IS the tag at this cut (`origin/trunk` and `v0.2.16^{commit}`
+# both resolve to 93a5fe50), so the number the gate will meet and the
+# number at the release are the same number. The corpus grew 24 files
+# and all 24 land in the GATED column: every refusal 0.2.16 adds sits at
+# a later tier than the exclusion's `check: fail(E0[012]` — s175's
+# `rows/negative/error_alias_private/` is E0304, s177's #444 witness
+# `memory/move_field_use_after.lu` is E1001, `typecheck/list_lit_elem_unfit.lu`
+# is E0415 and `strings/trim_cutset_refused.lu` is E0402. Witnessed at
+# the boundary: FLOOR=658 passes, FLOOR=659 fails "checkout suspect" on
+# the same 658 files.
+#
+# AND THE OTHER BRANCH WAS SEEN RED TOO, which the boundary alone does
+# not prove. `FLOOR=659` exercises the pass-COUNT branch; the ERROR-NODE
+# branch is the one this gate exists for, and a run that only ever
+# passes has never shown it works. Planted `tl11_planted_error.lu`
+# (`fn main() -> !int { let ( = }`) into a scratch COPY of the corpus:
+# 659 gated, `FAIL: 1 file(s) with ERROR/MISSING nodes`, exit 1, the
+# file named. Both failure branches and the pass branch, at this pin.
+#
+# THE GRAMMAR DID NOT MOVE AT THIS BUMP, and that is checked two ways
+# rather than assumed. `spec/grammar.ebnf` is unchanged across
+# `2e4ca769..93a5fe50`: `git diff --quiet` exits 0 AND the blob sha is
+# `4b2ed9939875a8a7d65924449fbd2ba29a3fcd56` on both sides — the second
+# check is the stronger one, because a diff can be quieted by a filter
+# and a blob sha cannot. So no production moved, the external scanner
+# paid nothing, and no word or symbolic terminal joined the inventory.
+# `tree-sitter generate` at this pin leaves `src/` byte-identical
+# (`git diff --exit-code -- src/`, clean), which is the check run rather
+# than a regenerate committed: a commit of identical bytes would be a
+# claim that something moved. The `FORMAT_SPEC` write-out that cost tl09
+# five contextual rulings was the PREVIOUS release's and does not recur.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-640}"
+FLOOR="${FLOOR:-658}"
 
 total=0
 skipped=0
