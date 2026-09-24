@@ -1,5 +1,49 @@
 # Changelog
 
+## tl11 — 2026-09-24 — the floor at v0.2.16, and a grammar that did not move
+
+**The floor ratchets 640 → 658.** ONE number this time, not two: wolf-lang's
+default branch IS the tag at this cut — `origin/trunk` and `v0.2.16^{commit}`
+both resolve to `93a5fe50` — so the number the gate will meet and the number at
+the release are the same number, and tl09's two-numbers paragraph collapses.
+690 `.lu` files, **658 gated, 32 parse-tier counter-examples excluded, zero
+ERROR nodes**. The corpus grew 24 files and all 24 land in the gated column:
+every refusal 0.2.16 adds sits at a later tier than the exclusion's
+`check: fail(E0[012]` — s175's `rows/negative/error_alias_private/` is E0304,
+s177's #444 witness `memory/move_field_use_after.lu` is E1001,
+`typecheck/list_lit_elem_unfit.lu` is E0415, `strings/trim_cutset_refused.lu`
+is E0402. Predicted 658 before measuring, and it is 658.
+
+**Both failure branches were seen red, not just the boundary.** `FLOOR=658`
+passes and `FLOOR=659` fails "checkout suspect" — the pass-COUNT branch. The
+ERROR-NODE branch is the one the gate exists for, and it had never been shown
+to work at any pin, so a deliberately unparseable file was planted into a
+scratch **copy** of the corpus: `FAIL: 1 file(s) with ERROR/MISSING nodes`,
+the file named, exit 1. Three branches at one pin.
+
+**The grammar did not move, checked two ways.** `spec/grammar.ebnf` is
+unchanged across `2e4ca769..93a5fe50`: `git diff --quiet` exits 0 **and** the
+blob sha is `4b2ed9939875a8a7d65924449fbd2ba29a3fcd56` on both sides — the
+second is the stronger check, because a diff can be quieted by a filter and a
+blob sha cannot. So no production moved, the external scanner paid nothing, and
+`tree-sitter generate` leaves `src/` byte-identical. **Nothing regenerated was
+committed**: a commit of identical bytes would be a claim that something moved.
+tl09's five `FMT_TYPE` contextual rulings were the previous release's.
+`tree-sitter test`: 127 parses, 127 successful. All three query files load.
+
+**Where the ratchet actually lives, since the last two contracts could not find
+it.** It is not a named constant: `script/parse-wolf-corpus.sh:107`, a shell
+default-value expansion, `FLOOR="${FLOOR:-658}"`. A grep for `floor` or
+`ratchet` matches the 88 lines of comment above it — which are the ratchet's
+whole history and not the thing that decides anything.
+
+**The dispatch is recorded, not claimed.** Run `35952891188`
+(`repository_dispatch`, `wolf-lang-corpus`, success) fired nine seconds after
+the `v0.2.16` tag. That is the dispatch path delivering; it is not read as "the
+corpus was gated", because a corpus parse is minutes and nine seconds cannot
+contain one. The 658 above is measured on this branch with the boundaries and
+the planted red beside it.
+
 ## tl09 — 2026-09-17 — the floor at v0.2.15, and the dispatch that fired for real
 
 **The floor ratchets 584 → 640.** Two numbers exist at this bump and the
