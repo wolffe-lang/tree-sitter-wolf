@@ -92,3 +92,93 @@ identical bytes is a claim that something moved.
 The floor is not asserted from one green. It is witnessed at **N pass and N+1
 fail** — the "checkout suspect" branch of the gate — at the tag and at trunk
 both, as the ratchet's own comment has required since tl08.
+
+## 4. Measured
+
+### The floor
+
+```
+$ TREE_SITTER=./node_modules/.bin/tree-sitter sh script/parse-wolf-corpus.sh <wolf-lang>/corpus
+wolf-lang corpus: 658 files gated, 32 parse-tier counter-examples excluded
+PASS: zero ERROR nodes across the corpus (658 files, floor 640)
+```
+
+**658 gated, 32 excluded, zero ERROR nodes — 690 = 658 + 32, exactly the
+prediction.** The 24 new corpus files land 24-for-24 in the gated column: every
+refusal 0.2.16 adds is at a later tier than the exclusion's `check: fail(E0[012]`.
+The floor ratchets **640 → 658** (`script/parse-wolf-corpus.sh:107`, now
+`FLOOR="${FLOOR:-658}"`).
+
+**One number, not two.** wolf-lang's default branch IS the tag at this cut:
+`origin/trunk` and `v0.2.16^{commit}` both resolve to
+`93a5fe504593ca7642b78ba83b4986e7a03cfe71`. So "the number the gate will meet"
+and "the number at the release" are the same number, and the two-numbers
+paragraph the ratchet grew at tl09 collapses. Re-checked at the end of the lane
+as well as at the start, because a default branch can move under a lane.
+
+### Both boundaries, and both failure branches
+
+The pass-count boundary, as every ratchet since tl08 has recorded:
+
+```
+FLOOR=658  ->  PASS: zero ERROR nodes across the corpus (658 files, floor 658)      exit 0
+FLOOR=659  ->  FAIL: only 658 file(s) gated — the floor is 659; checkout suspect    exit 1
+```
+
+**And the other failure branch was seen red too**, which the boundary alone
+does not prove. `FLOOR=659` exercises the pass-COUNT branch; the ERROR-NODE
+branch is the one this gate exists for, and a gate that has only ever passed has
+never shown that it works. Planted `tl11_planted_error.lu`
+(`fn main() -> !int { let ( = }`) into a scratch **copy** of the corpus:
+
+```
+wolf-lang corpus: 659 files gated, 32 parse-tier counter-examples excluded
+FAIL: 1 file(s) with ERROR/MISSING nodes:
+  /tmp/tl11-negctl/corpus/tl11_planted_error.lu
+exit 1
+```
+
+Three branches, one pin: pass, floor-fail, ERROR-fail.
+
+**On the runtime, before anyone reads 15 s as a fast green.** This run took
+**15 s** where tl09's CI run took 3 m 23 s. That is not a gate skipping work: CI
+invokes the parser as `npx tree-sitter`, which pays node's module resolution
+**once per file**, 658 times; this lane passed the binary directly. The count
+the gate prints (658) is the check that it did the work, and the planted-error
+run above is the check that it can still fail. Both are reported rather than the
+duration alone, because a duration is not evidence either way.
+
+### The grammar
+
+```
+$ tree-sitter generate && git diff --exit-code --stat -- src/
+GATE1 PASS: src/ byte-identical after regenerate at the 0.2.16 grammar
+```
+
+No drift, as predicted, and **nothing regenerated was committed** — a commit of
+identical bytes would be a claim that something moved. The other two gates at
+the new pin: `tree-sitter test` **127 parses, 127 successful, 0 failed**, and
+all three query files (`highlights`, `locals`, `injections`) load against the
+grammar.
+
+### The dispatch, recorded and not claimed
+
+tree-sitter-wolf run **35952891188** (`repository_dispatch`,
+`wolf-lang-corpus`, success) ran nine seconds after the `v0.2.16` tag. That is
+the dispatch path delivering, and it is **not** read here as "the corpus was
+gated": a corpus parse is minutes of work and nine seconds cannot contain one,
+which is the fast-green-on-a-slow-job rule applied to a run this lane did not
+start. The 658 above is measured on this branch, on this host, with the
+boundaries and the planted red beside it.
+
+## 5. Done-when
+
+- branch `tl11` on origin — yes
+- PR open and unmerged — yes
+- CI green at head — see the PR body's evidence index
+- §2 drift: the ratchet's location (a `${FLOOR:-…}` default expansion on line
+  107, not a named constant) — reported above; every other input held
+- §3 prediction commit precedes the measurement — `c5e8d6b` lands before
+  `a894a52`
+- the worktree is a clone under `~/lanes/tl11/` on the build host; nothing was
+  created in any shared checkout, and no orphan is left behind
