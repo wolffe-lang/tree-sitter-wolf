@@ -1,5 +1,32 @@
 # Changelog
 
+## tl13 — 2026-09-26 — the moded index store, and the floor at v0.2.17
+
+**The grammar learns s182's one moded store** (`[gram.expr.assign]`,
+wolf-lang#438): `assignment_statement` has a second arm,
+`index_expression '=' 'take' expr`, with `take` as an anonymous token under a
+new `mode` field. It adds no node type, and `highlights.scm` already paints
+`"take"`. The left side is `index_expression` because that matches the
+compiler's test exactly (`exprs.rs`: plain `=`, a `BracketApply` head, then
+`Kw(Take)`). `x = take v`, `s.f = take v`, `xs[0] += take v`,
+`xs[0].f = take v` and `xs[0] = mut v` stay ERROR nodes, the compiler's E0201,
+and each is an `:error` case in `test/corpus/statements.txt`. The arm adds one
+declared conflict, `[$._expression, $.assignment_statement]`, and carries
+`prec.dynamic(1)`. Without it, `xs[0] = take (v)` reads as a store of the call
+`take(v)` inside a block, because `take` lexes as an identifier outside mode
+positions. The wider form of that behavior predates this change and is
+tree-sitter-wolf#20.
+
+**The floor ratchets 658 → 675** at wolf-lang `02afce84` = `v0.2.17` = the
+default branch: 707 `.lu`, 32 parse-tier counter-examples excluded, zero ERROR
+nodes. Trunk's grammar gated the same 675 and failed on exactly the three
+`corpus/memory/index_store_take_*.lu` files that turned #19 red (runs
+36131591364 and 36212574034). Both failure branches were seen red: `FLOOR=676`
+fails "checkout suspect", and a planted `x = take xs` fails with the file named.
+`tree-sitter test`: 133 of 133. The new positive case fails against trunk's
+grammar. `docs/spec-findings-tl13.md` has the prediction, its score (five of
+six held; the test count was off by one) and the evidence.
+
 ## tl11 — 2026-09-24 — the floor at v0.2.16, and a grammar that did not move
 
 **The floor ratchets 640 → 658.** ONE number this time, not two: wolf-lang's
