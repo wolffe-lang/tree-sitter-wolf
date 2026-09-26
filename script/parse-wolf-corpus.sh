@@ -134,12 +134,31 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # claim that something moved. The `FORMAT_SPEC` write-out that cost tl09
 # five contextual rulings was the PREVIOUS release's and does not recur.
 #
+# Re-measured 675 at trunk = v0.2.17 = `02afce84` (2026-09-26, tl13,
+# tree-sitter-wolf#19) — 707 `.lu` files, the same 32 parse-tier
+# counter-examples excluded, zero ERROR nodes. ONE number again: wolf-lang's
+# default branch is the tag at this cut. The corpus grew 17 files, all
+# gated. THE GRAMMAR MOVED THIS TIME: s182's `[gram.expr.assign]` admits
+# `take` on the right of a plain `=` whose place is a container element
+# (`index_place '=' 'take' expr`), and three of the new files spell it
+# (`memory/index_store_take_{list,map,read_param}.lu`, E1001/E1001/E1014 —
+# later tiers, so gated). The trunk grammar (19ec204) parsed 672 of the 675
+# and ERRORed on exactly those three: the red #19 recorded from the daily
+# gate on 2026-09-25 (run 36131591364) and the release dispatch on 09-26
+# (run 36212574034), before the tag and at it. `assignment_statement` grew
+# the moded arm, and the refused spellings (`x = take v`, `s.f = take v`,
+# `xs[0] += take v`, `xs[0].f = take v`, `xs[0] = mut v`) stay ERROR —
+# the compiler's E0201 — pinned as `:error` cases in test/corpus.
+# Witnessed at the boundary: FLOOR=675 passes, FLOOR=676 fails "checkout
+# suspect" on the same 675 files; and the ERROR branch on a scratch copy
+# with `x = take xs` planted: 676 gated, `FAIL: 1 file(s)`, the file named.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-658}"
+FLOOR="${FLOOR:-675}"
 
 total=0
 skipped=0
