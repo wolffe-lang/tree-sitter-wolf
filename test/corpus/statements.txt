@@ -154,6 +154,113 @@ bits |= flag
     (identifier)))
 
 ==================
+moded index store (s182, [gram.expr.assign])
+==================
+
+fn f() {
+    xs[0] = take v
+    m["k"] = take v
+    a.b[i] = take (v)
+    xs[0] = v
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (assignment_statement
+        (index_expression
+          (identifier)
+          (integer_literal))
+        (identifier))
+      (assignment_statement
+        (index_expression
+          (identifier)
+          (string_literal))
+        (identifier))
+      (assignment_statement
+        (index_expression
+          (field_expression
+            (identifier)
+            (identifier))
+          (identifier))
+        (parenthesized_expression
+          (identifier)))
+      (assignment_statement
+        (index_expression
+          (identifier)
+          (integer_literal))
+        (identifier)))))
+
+==================
+moded store refused: a binding
+:error
+==================
+
+fn f() {
+    x = take v
+}
+
+---
+
+
+
+==================
+moded store refused: a field
+:error
+==================
+
+fn f() {
+    s.f = take v
+}
+
+---
+
+
+
+==================
+moded store refused: a compound operator
+:error
+==================
+
+fn f() {
+    xs[0] += take v
+}
+
+---
+
+
+
+==================
+moded store refused: a field of an element
+:error
+==================
+
+fn f() {
+    xs[0].f = take v
+}
+
+---
+
+
+
+==================
+moded store refused: a mode other than take
+:error
+==================
+
+fn f() {
+    xs[0] = mut v
+}
+
+---
+
+
+
+==================
 defer and errdefer
 ==================
 
