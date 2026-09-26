@@ -715,6 +715,16 @@
           }
         ]
       },
+      "mode": {
+        "multiple": false,
+        "required": false,
+        "types": [
+          {
+            "type": "take",
+            "named": false
+          }
+        ]
+      },
       "operator": {
         "multiple": false,
         "required": true,

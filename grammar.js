@@ -121,6 +121,11 @@ module.exports = grammar({
     [$.path, $._expression],
     // `()` in an argument-list position: unit expression vs unit type.
     [$.unit_type, $.unit_expression],
+    // `xs[i] =` — the moded store's place (s182, [gram.expr.assign]) or
+    // an ordinary place reduced to `_expression`. The token after `=`
+    // decides: `take` keeps only the moded arm, anything else only the
+    // plain one. The one conflict the arm adds.
+    [$._expression, $.assignment_statement],
   ],
 
   rules: {
@@ -174,14 +179,43 @@ module.exports = grammar({
 
     // Assignment is a statement, not an expression [gram.expr.assign].
     // `place` is any expression; place-ness is sema's check, not grammar's.
-    assignment_statement: $ => seq(
-      repeat($.attribute),
-      field('left', $._expression),
-      field('operator', choice(
-        '=', '+=', '-=', '*=', '/=', '%=',
-        '&=', '|=', '^=', '<<=', '>>=',
+    //
+    // The second arm is the one moded store (s182, wolf-lang#438, v0.2.17):
+    // a plain `=` whose place is a container element may spell `take` on
+    // its right-hand side — `xs[i] = take v`, `m[k] = take v` — and
+    // nowhere else in an assignment may a mode appear. `x = take v`,
+    // `s.f = take v`, `xs[0].f = take v` and every compound operator's
+    // right-hand side stay ERROR nodes, as they stay E0201 in the
+    // compiler. The left is `index_expression` because that is exactly
+    // the compiler's test (`crates/wolf_parse/src/exprs.rs`: plain `=`,
+    // a `BracketApply` head, then `Kw(Take)`) — the one postfix bracket
+    // shape of [gram.amb.brackets]; whether the bracket is a container is
+    // sema's. `take` is a token of the statement, not an expression and
+    // not a `parameter_mode` (which would admit `mut`), so it is an
+    // anonymous token under a `mode` field: no new node type, and
+    // highlights.scm already paints `"take"`.
+    assignment_statement: $ => choice(
+      seq(
+        repeat($.attribute),
+        field('left', $._expression),
+        field('operator', choice(
+          '=', '+=', '-=', '*=', '/=', '%=',
+          '&=', '|=', '^=', '<<=', '>>=',
+        )),
+        field('right', $._expression),
+      ),
+      // Dynamic precedence because `take` is a contextual keyword here:
+      // outside a mode position it lexes as an identifier, so
+      // `xs[0] = take (v)` also parses as a call `take(v)`, and GLR
+      // picked the call inside a block (probed on kasumi). The compiler
+      // always reads `take` as `Kw(Take)`, so the moded arm wins.
+      prec.dynamic(1, seq(
+        repeat($.attribute),
+        field('left', $.index_expression),
+        field('operator', '='),
+        field('mode', 'take'),
+        field('right', $._expression),
       )),
-      field('right', $._expression),
     ),
 
     defer_statement: $ => seq(
