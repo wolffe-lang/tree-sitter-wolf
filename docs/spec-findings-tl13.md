@@ -104,10 +104,98 @@ The clause, quoted from `spec/01-grammar.md` at `02afce84`:
    --exit-code -- src/` after a CI regenerate) is green at head.
 6. **Queries** load unchanged.
 
+## 3, scored (written after the measurement; the section above is unedited since `a3d763b`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | one conflict, `index_expression` vs its reduction on `=` | `tree-sitter generate` refused with exactly that conflict (`(_expression index_expression) • '='` vs `(assignment_statement index_expression • '=' 'take' _expression)`); declared as `[$._expression, $.assignment_statement]`, then generate exit 0 | **yes**, and one thing not predicted: see "the tie" below |
+| 2 | 127 → 132 cases | **133**, all passing | **no, off by one**: the case list grew after the prediction. The fifth refused spelling, `xs[0] = mut v`, is the clause's "nowhere else may a mode appear" and is not in the compiler's four |
+| 3 | 707 `.lu`, 32 excluded, 675 gated, zero ERROR | `wolf-lang corpus: 675 files gated, 32 parse-tier counter-examples excluded` / `PASS: zero ERROR nodes across the corpus (675 files, floor 658)` | **yes** |
+| 4 | 675 passes, 676 fails, the planted file fails, trunk reds on exactly the three | all four as predicted (outputs below) | **yes** |
+| 5 | `src/` moves | `parser.c`, `grammar.json`, `node-types.json` (+10 lines: the new `mode` field, anonymous `take`) | **yes** |
+| 6 | queries load unchanged | `highlights`, `locals`, `injections` each exit 0 | **yes** |
+
+**The tie, which I did not predict.** `take` is a contextual keyword in this
+grammar: outside a mode position it lexes as `identifier`. So
+`xs[0] = take (v)` has two complete parses, the moded store and a store of the
+call `take(v)`, and inside a block GLR picked the call. The compiler always reads
+`take` as `Kw(Take)`. The moded arm therefore carries `prec.dynamic(1, …)`. The
+positive test pins the result: its third store has
+`(parenthesized_expression (identifier))` on the right, not a call. The same
+lexing lets `x = take (v)`, `s.f = take (v)` and `xs[0] = mut (v)` parse as
+calls, on trunk as well as here, where the compiler says E0201. That behavior
+predates this lane and is filed as **tree-sitter-wolf#20**, with the compiler
+column measured on the published 0.2.17 binary.
+
 ## 4. Evidence index
 
-Filled as the work lands; every line cites a run id, a sha, a path or a
-captured output.
+All local runs are on kasumi under `~/lanes/tl13/`, with tree-sitter-cli
+0.26.13 (binary sha256 `ad369a4d…ac00af`, identical to tl11's) against a
+sparse `wolf-lang` clone at `02afce84` (707 `.lu`).
+
+- **The red, reproduced before the edit**, trunk `19ec204`:
+  `~/lanes/tl13/gate-trunk.log`, which matches CI runs 36212574034 and 36131591364 line for line:
+  ```
+  wolf-lang corpus: 675 files gated, 32 parse-tier counter-examples excluded
+  FAIL: 3 file(s) with ERROR/MISSING nodes:
+  …/corpus/memory/index_store_take_list.lu
+  …/corpus/memory/index_store_take_map.lu
+  …/corpus/memory/index_store_take_read_param.lu
+  exit 1
+  ```
+- **The green at head** (`gate-head-default.log`, committed default floor):
+  `675 files gated, 32 … excluded` / `PASS: zero ERROR nodes across the corpus (675 files, floor 675)`, exit 0.
+- **Boundaries** (`gate-floor-675.log`, `gate-floor-676.log`):
+  `FLOOR=675 exit=0 PASS … (675 files, floor 675)`;
+  `FLOOR=676 exit=1 FAIL: only 675 file(s) gated — the floor is 676; checkout suspect`.
+- **The ERROR branch** (`gate-planted.log`): the refused spelling itself,
+  `x = take xs` inside `main`, planted as `tl13_planted_error.lu` in a scratch
+  **copy** (`~/lanes/tl13/negctl/corpus`):
+  `676 files gated` / `FAIL: 1 file(s) with ERROR/MISSING nodes:` / the file, exit 1.
+- **Spelling probes** (`probes-head.log`, `probes-trunk.log`, `probe.sh`; each
+  spelling inside `fn f() { }`), head then trunk:
+  ```
+  xs[0] = take v      head clean   trunk ERROR
+  m["k"] = take v     head clean   trunk ERROR
+  a.b[i] = take (v)   head clean (moded)   trunk clean (as the call take(v))
+  xs[0] = v           clean both
+  x = take v          ERROR both
+  s.f = take v        ERROR both
+  xs[0] += take v     ERROR both
+  xs[0].f = take v    ERROR both
+  xs[0] = mut v       ERROR both
+  ```
+- **The test suite**: head `test-head.log`, `Total parses: 133; successful
+  parses: 133`, exit 0. The same `statements.txt` against trunk's grammar
+  (`test-trunk-newcases.log`): exit 1, `✗ moded index store`, 132 of 133. The
+  positive case reds without the arm. The five `:error` cases pass on both
+  grammars by design: they pin non-regressions, not the change.
+- **Generated files**: `src/parser.c`, `src/grammar.json`, `src/node-types.json`,
+  `grammar.js` and `test/corpus/statements.txt` hashed on kasumi and on the
+  nomad-1 worktree before commit: byte-identical, 5 of 5.
+- **The compiler's column for #20**: wolf 0.2.17 from
+  `wolf-0.2.17-x86_64-unknown-linux-gnu.tar.gz` (sha256 `a95d0f0f…ce24ce`,
+  matching the release digest), `wolf build` per spelling: the four refused
+  spellings E0201, the two admitted ones only E0301 (unbound names). Issue #20
+  comment 5850431234.
+- **CI**: the PR's `pull_request` run and the branch receiver run
+  (`workflow_dispatch --ref tl13`, the same `gate` job against wolf-lang's
+  default branch = `02afce84`) are cited by id in the PR body at the head sha.
+
+**A false green caught on the way.** The first run of the new test file
+against trunk's grammar passed 133 of 133. That cannot be true, since trunk
+refuses `xs[0] = take v`. `tree-sitter` compiles every tree named `wolf` into
+one shared `~/.cache/tree-sitter/lib/wolf.so` and rebuilds only when a
+`src/` file is newer than it. The trunk worktree's `parser.c` was older than
+the head build, so trunk's run was served head's parser. Every run cited above
+uses a private `TREE_SITTER_LIBDIR` per tree: `lib-head/wolf.so` sha256
+`9afe1d6e…22b105`, `lib-trunk/wolf.so` `db12bf48…d0f538`. The shared cache
+file was overwritten by this lane's first runs. It is a cache and was not
+deleted. CI is unaffected because every runner starts empty. A second, louder
+failure: the first `npm ci` on kasumi left no CLI binary (the package's
+`install.js` did not fetch it; running `node install.js` by hand did). The gate
+read the missing binary as 675 ERROR files and exited 1, so it failed loudly,
+and nothing from that run is cited.
 
 ## 5. Done-when
 
