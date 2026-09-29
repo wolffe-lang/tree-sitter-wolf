@@ -65,3 +65,70 @@ the floor number is a re-measurement.
    admitted; eg01's `elem_*` and s184's `mut_param_*` are memory-tier witnesses
    (E1001/E1014-class or `run`) over existing syntax. EG2's
    `swap(mut xs[0], mut xs[1])` is wave 50's eg02 and is **not** in 0.2.18.
+
+## 3, scored (written after the measurement; the section above is unedited since `da2a396`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | 715 gated, 32 excluded, PASS; `FLOOR=715` passes, `FLOOR=716` fails on the same 715 | `gate-default.log`: `715 files gated, 32 parse-tier counter-examples excluded` / `PASS … (715 files, floor 675)`; `gate-floor-715.log` PASS rc 0; `gate-floor-716.log` `FAIL: only 715 file(s) gated — the floor is 716; checkout suspect` rc 1 | **yes** |
+| 2 | a planted file reds the ERROR branch: 716 gated, `FAIL: 1 file(s)`, named | `gate-planted.log`: `716 files gated`, `FAIL: 1 file(s) with ERROR/MISSING nodes:` `…/planted-corpus/tl14_planted_error.lu`, rc 1 | **yes** |
+| 3 | `generate` leaves `src/` byte-identical; `test` passes at trunk's count | `ts-generate.log`: `generate rc 0`, `git status --porcelain -- src/` empty, `src diff rc 0`; `ts-test.log`: `Total parses: 133; successful parses: 133; failed parses: 0`, `test rc 0` (133 = tl13's count at `388bf91`) | **yes** |
+| 4 | no grammar change for the 40 new / 2 modified files | zero ERROR nodes over all 715; no `grammar.js` edit | **yes** |
+
+Four of four. The committed default (`FLOOR="${FLOOR:-715}"`, blob `867f73cc`
+of `script/parse-wolf-corpus.sh`, hash checked identical on kasumi) was run
+again **after** the edit, with no `FLOOR` in the environment:
+`gate-committed-default.log` PASS at 715 (floor 715), rc 0; and on a scratch
+copy with one gated file removed (`memory/mut_param_restore_whole.lu`),
+`gate-committed-shrunk.log`: `714 files gated` / `FAIL: only 714 file(s)
+gated — the floor is 715; checkout suspect`, rc 1. So the number the default
+branch meets is the number committed, and the committed default bites one file
+below it.
+
+**Private libdir, checked.** Every run above exported
+`TREE_SITTER_LIBDIR=~/lanes/tl14/lib-ts`; that directory's `wolf.so` (sha256
+9afe1d6eaba8975caadefc93eda45ade686a871ffa589d90e3efee7bad22b105) was built at
+20:44 on 2026-09-28, and the shared `~/.cache/tree-sitter/lib/wolf.so` still
+carries its 2026-09-26 18:19 mtime — untouched.
+
+**A side note on the install.** `npm ci` on kasumi (node v26.8.1) exited 0
+and left `node_modules/tree-sitter-cli/tree-sitter` **absent**: the package's
+postinstall download failed silently, and `install.js` run by hand printed
+"Downloading …" and wrote nothing. The binary was fetched with `curl` from the
+same v0.26.13 release URL; its sha256
+ad369a4df2bb1ebf5cd37045d34bdc9160b9351f92520399106d8e689cac00af is
+identical to tl13's copy (`~/lanes/tl13/ts/node_modules/tree-sitter-cli/tree-sitter`).
+An install step reporting success having installed nothing is tl11's
+chocolatey lesson again; CI's `npm ci` on ubuntu is unaffected (its runs
+print the parse counts).
+
+## 4. Evidence index
+
+All logs are on kasumi under `~/lanes/tl14/`; the clone the runs used is
+`~/lanes/tl14/ts` at `da2a396` (runs 1–3) and the same tree plus the
+committed `script/parse-wolf-corpus.sh` blob `867f73cc` (the committed-default
+pair). The corpus is `~/lanes/tl14/wolf-lang`, a depth-1 clone at
+`v0.2.18` = `ec56a08f` (747 `.lu`).
+
+| claim | artifact |
+|---|---|
+| floor 715 at v0.2.18 = trunk | `gate-default.log`, `gate-floor-715.log`, `gate-committed-default.log` |
+| pass-count branch red | `gate-floor-716.log` (rc 1), `gate-committed-shrunk.log` (rc 1) |
+| ERROR-node branch red | `gate-planted.log` (rc 1, `tl14_planted_error.lu` named) |
+| grammar unchanged | `ts-generate.log` (`src diff rc 0`); `spec/grammar.ebnf` blob `3f24d076fde0079aa3b6260b8cbadc97a35a9eff` at `02afce84` and `ec56a08f` |
+| corpus tests | `ts-test.log` (133/133) |
+| the receiver already met 0.2.18 | run 36333447636 (`repository_dispatch`, wolf-lang `ec56a08f`, 715 gated, floor 675), sent by wolf-lang release run 36333436269; schedule run 36431904676 the same |
+| private libdir | `~/lanes/tl14/lib-ts/wolf.so` sha256 9afe1d6e…, shared cache mtime 2026-09-26 |
+| CI at the head | the PR's `pull_request` run and a `workflow_dispatch --ref tl14` run, ids in the PR body |
+
+## 5. Done-when
+
+- branch `tl14` on origin; PR open, unmerged, its body carrying the five
+  sections
+- CI green at the head sha (`gh run view`), and a `workflow_dispatch --ref
+  tl14` run of the same gate green against wolf-lang `ec56a08f` with
+  `715 files gated` in its log
+- the §3 commit (`da2a396`) precedes the ratchet commit
+- the floor at 715, both failure branches seen red with captured logs
+- `/private/tmp/tl14-ts` removed; `~/lanes/tl14/` pruned to its logs; no
+  orphan process
