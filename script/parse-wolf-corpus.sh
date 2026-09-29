@@ -153,12 +153,27 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # suspect" on the same 675 files; and the ERROR branch on a scratch copy
 # with `x = take xs` planted: 676 gated, `FAIL: 1 file(s)`, the file named.
 #
+# Re-measured 715 at trunk = v0.2.18 = `ec56a08f` (2026-09-28, tl14) —
+# 747 `.lu` files, the same 32 parse-tier counter-examples excluded, zero
+# ERROR nodes, with a private TREE_SITTER_LIBDIR. One number: wolf-lang's
+# default branch is the tag at this cut. The corpus grew 40 files over
+# v0.2.17..v0.2.18, all under `corpus/memory/` and all gated — s183's seven
+# `ctl_store_order*`, eg01/eg01b's 24 `elem_*`, s184's nine `mut_param_*`
+# (memory-tier refusals or `run`, never `fail(E0[012]`). The grammar did not
+# move: `spec/grammar.ebnf` is blob `3f24d076` at both tags, `tree-sitter
+# generate` leaves `src/` byte-identical, and the receiver's release
+# dispatch (run 36333447636, at `ec56a08f`) had already gated the same 715
+# against the old floor. Witnessed at the boundary: FLOOR=715 passes,
+# FLOOR=716 fails "checkout suspect" on the same 715 files; and the ERROR
+# branch on a scratch copy with `fn main() -> !int { let ( = }` planted:
+# 716 gated, `FAIL: 1 file(s)`, the file named.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-675}"
+FLOOR="${FLOOR:-715}"
 
 total=0
 skipped=0
