@@ -1,5 +1,18 @@
 # Changelog
 
+## tl14 — 2026-09-28 — the floor at v0.2.18
+
+**The floor ratchets 675 → 715** at wolf-lang `ec56a08f` = `v0.2.18` = the
+default branch: 747 `.lu`, the same 32 parse-tier counter-examples excluded,
+zero ERROR nodes, run with a private `TREE_SITTER_LIBDIR`. The 40 new corpus
+files (s183, eg01/eg01b, s184; all `corpus/memory/`) are all gated and all
+parse. The grammar did not move (`spec/grammar.ebnf` blob identical across
+`v0.2.17..v0.2.18`; `tree-sitter generate` leaves `src/` byte-identical;
+133 of 133 corpus tests). Both failure branches were seen red: `FLOOR=716`
+fails "checkout suspect", and a planted `let ( =` fails with the file named.
+`docs/spec-findings-tl14.md` has the contract, the prediction (four of four
+held) and the evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0218.md`.
+
 ## tl13 — 2026-09-26 — the moded index store, and the floor at v0.2.17
 
 **The grammar learns s182's one moded store** (`[gram.expr.assign]`,
