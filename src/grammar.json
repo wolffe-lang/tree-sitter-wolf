@@ -250,52 +250,48 @@
           ]
         },
         {
-          "type": "PREC_DYNAMIC",
-          "value": 1,
-          "content": {
-            "type": "SEQ",
-            "members": [
-              {
-                "type": "REPEAT",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "attribute"
-                }
-              },
-              {
-                "type": "FIELD",
-                "name": "left",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "index_expression"
-                }
-              },
-              {
-                "type": "FIELD",
-                "name": "operator",
-                "content": {
-                  "type": "STRING",
-                  "value": "="
-                }
-              },
-              {
-                "type": "FIELD",
-                "name": "mode",
-                "content": {
-                  "type": "STRING",
-                  "value": "take"
-                }
-              },
-              {
-                "type": "FIELD",
-                "name": "right",
-                "content": {
-                  "type": "SYMBOL",
-                  "name": "_expression"
-                }
+          "type": "SEQ",
+          "members": [
+            {
+              "type": "REPEAT",
+              "content": {
+                "type": "SYMBOL",
+                "name": "attribute"
               }
-            ]
-          }
+            },
+            {
+              "type": "FIELD",
+              "name": "left",
+              "content": {
+                "type": "SYMBOL",
+                "name": "index_expression"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "operator",
+              "content": {
+                "type": "STRING",
+                "value": "="
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "mode",
+              "content": {
+                "type": "STRING",
+                "value": "take"
+              }
+            },
+            {
+              "type": "FIELD",
+              "name": "right",
+              "content": {
+                "type": "SYMBOL",
+                "name": "_expression"
+              }
+            }
+          ]
         }
       ]
     },

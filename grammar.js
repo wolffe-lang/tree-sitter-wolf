@@ -228,18 +228,18 @@ module.exports = grammar({
         )),
         field('right', $._expression),
       ),
-      // Dynamic precedence because `take` is a contextual keyword here:
-      // outside a mode position it lexes as an identifier, so
-      // `xs[0] = take (v)` also parses as a call `take(v)`, and GLR
-      // picked the call inside a block (probed on kasumi). The compiler
-      // always reads `take` as `Kw(Take)`, so the moded arm wins.
-      prec.dynamic(1, seq(
+      // No dynamic precedence: tl13 needed `prec.dynamic(1, …)` here while
+      // `take` was contextual, because `xs[0] = take (v)` also read as a
+      // call `take(v)` and GLR picked the call inside a block. With `take`
+      // reserved (#20, the `reserved` sets above) the call reading cannot
+      // start, so the moded arm is the only one.
+      seq(
         repeat($.attribute),
         field('left', $.index_expression),
         field('operator', '='),
         field('mode', 'take'),
         field('right', $._expression),
-      )),
+      ),
     ),
 
     defer_statement: $ => seq(
