@@ -4315,17 +4315,21 @@
             "type": "FIELD",
             "name": "field",
             "content": {
-              "type": "CHOICE",
-              "members": [
-                {
-                  "type": "SYMBOL",
-                  "name": "identifier"
-                },
-                {
-                  "type": "SYMBOL",
-                  "name": "integer_literal"
-                }
-              ]
+              "type": "RESERVED",
+              "content": {
+                "type": "CHOICE",
+                "members": [
+                  {
+                    "type": "SYMBOL",
+                    "name": "identifier"
+                  },
+                  {
+                    "type": "SYMBOL",
+                    "name": "integer_literal"
+                  }
+                ]
+              },
+              "context_name": "member"
             }
           }
         ]
@@ -6504,5 +6508,17 @@
   ],
   "inline": [],
   "supertypes": [],
-  "reserved": {}
+  "reserved": {
+    "global": [
+      {
+        "type": "STRING",
+        "value": "take"
+      },
+      {
+        "type": "STRING",
+        "value": "mut"
+      }
+    ],
+    "member": []
+  }
 }

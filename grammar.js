@@ -98,6 +98,30 @@ module.exports = grammar({
 
   word: $ => $.identifier,
 
+  // [gram.inv.kw] + [gram.lex.ident] ("Identifiers that collide with
+  // reserved keywords do not parse") — tree-sitter-wolf#20. Keywords
+  // extracted through `word` are CONTEXTUAL by default: a keyword lexes
+  // as `identifier` in any state that does not expect it. For the two
+  // mode keywords that was wrong in a way a reader can see: `take` and
+  // `mut` are keywords to the compiler in every position, but here
+  // `x = take (v)` parsed as a call to a function named `take`, and
+  // `let take = 1` bound it. Reserving them makes the lexer return the
+  // keyword in every state, so a spelling outside a mode position is an
+  // ERROR, as it is E0201 in the compiler.
+  //
+  // The one position a reserved word IS a name is member position
+  // (`member ::= IDENT | INT | reserved_kw`, "keyword-transparent"):
+  // `xs.take(2)`, `p.mut`. `field_expression` opts out with the empty
+  // `member` set.
+  //
+  // Only the two MODE keywords are reserved here (#20's scope). The other
+  // 48 words of `reserved_kw` stay contextual as before: permissive, which
+  // the header allows, and widening the set is its own measured change.
+  reserved: {
+    global: _ => ['take', 'mut'],
+    member: _ => [],
+  },
+
   extras: $ => [/\s/, $.line_comment, $.doc_comment],
 
   externals: $ => [
@@ -868,7 +892,7 @@ module.exports = grammar({
     field_expression: $ => prec(PREC.POSTFIX, seq(
       field('value', $._expression),
       '.',
-      field('field', choice($.identifier, $.integer_literal)),
+      field('field', reserved('member', choice($.identifier, $.integer_literal))),
     )),
 
     try_expression: $ => prec(PREC.POSTFIX, seq(
