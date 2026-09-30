@@ -106,26 +106,72 @@ re-measurement.
 7. **The queries.** `queries/{highlights,locals,injections}.scm` load against
    the branch grammar (CI's gate 3 shape) with no edit.
 
+## 3, scored (written after the measurement; the section above is unedited since `8f8765e`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | exactly the ten new `:error` cases fail on trunk's grammar; every other case passes | `ts-red-trunk.log` (tests at `2343d27`, `grammar.js` blob `6c4c7687` = trunk's, `src/` tree `61248c31` = trunk's): **9 failures**, `Total parses: 146; successful parses: 137`, rc 1. The nine are the ten minus `f(take)`, which **already ERRORs on trunk** (`(ERROR (parameter_mode))` inside `arguments` — `take` is valid there as a mode, so the lexer returned the keyword and the missing operand errored). The three guards and all 133 old cases pass | **no — 9 of 10.** `f(take)` was not a #20 shape; the case stays as a guard of the refusal |
+| 2 | every refused shape exits non-zero with E0201; no guard reports E0201 | `compiler/verdicts.txt` (wolf 0.2.19, pin c2401f0): all ten refused, exit 2, but only **seven** with E0201 — `let take = 1` and `let mut = 1` are **E0207** ("expected a pattern"), `fn take() {}` is **E0008** ("`take` is a reserved keyword, so it cannot name a function"). The guards: g1/g2 E0301 only, g3 E0301 + W1002 — no E0201 | **no, on the code — 7 of 10 E0201.** All ten are refused at the front end (E0xxx), which is what the `:error` cases assert; the code I named was too narrow |
+| 3 | after the fix: 146/146, guards unchanged, `node-types.json` byte-identical | `fix1-test.log` then `fix2-test.log` and `ts-test.log` at the ratchet head: `146; successful parses: 146`, rc 0; `fix1-node-types.diff` and `fix2-node-types.diff` are 0 bytes; `src/parser.c` gains `MAX_RESERVED_WORD_SET_SIZE 2` (was 0), ABI unchanged at 15 | **yes** |
+| 4 | the moded store's `prec.dynamic` retires with no case moving | `fix2-test.log` 146/146 without it (commit `2f4796c`). And the converse, so the claim is not vacuous: trunk's `grammar.js` with **only** `prec.dynamic` removed (`nodyn-trunk-test.log`) fails the two moded-store cases that spell `take (v)` (93 and 109) — the reservation is what makes the removal safe | **yes** |
+| 5 | 746 gated, 32 excluded, zero ERRORs, the same paths as trunk; `FLOOR=746` passes, `747` fails; the planted #20 shape passes trunk's gate and reds the branch's | `gate-trunk.log` and `gate-branch.log`: `746 files gated, 32 … excluded`, PASS; `verdicts.diff` over all 778 corpus files (and 964 others) under both grammars: `diff rc 0`; `gate-floor-746.log` PASS rc 0; `gate-floor-747.log` `FAIL: only 746 file(s) gated — the floor is 747; checkout suspect` rc 1; `gate-planted-trunk.log` `747 files gated` / PASS rc 0 (#20's blindness, on the record); `gate-planted-branch.log` `747 files gated` / `FAIL: 1 file(s)` / `…/planted-corpus/tl15_planted_take_call.lu`, rc 1 | **yes** |
+| 6 | the ERROR-file set over wolf-std, boreutils, lobo and wolf-book is identical under both grammars | `verdicts-summary.txt`: wolf-std 471 files 0/0, boreutils 28 0/0, lobo 160 0/0, wolf-book 305 files **2/2** (the same two paths); `verdicts.diff` empty | **yes** |
+| 7 | the three query files load against the branch grammar | `queries.log`: highlights rc 0 (222 lines of captures), locals rc 0 (92), injections rc 0 (6), on `q-sample.lu` (every mode position plus the member guards) | **yes** |
+
+Five of seven. The two misses are both in the column I wrote from memory of
+#20's table rather than from the probe: `f(take)` was never in that table, and
+the table's codes were for store shapes only. Neither miss moves the fix.
+
+**The committed default** (`FLOOR="${FLOOR:-746}"`, `script/parse-wolf-corpus.sh`
+blob `2f2cfcc6`, checked identical on kasumi at `71e5a28`) was run again after
+the ratchet commit with no `FLOOR` in the environment:
+`gate-committed-default.log` PASS at 746 (floor 746), rc 0; and on a scratch
+copy with one gated file removed (`memory/mut_two_fields_one_region.lu`),
+`gate-committed-shrunk.log`: `745 files gated` / `FAIL: only 745 file(s)
+gated — the floor is 746; checkout suspect`, rc 1. `ts-generate.log` at the same
+head: `generate rc 0`, `src diff rc 0` — the committed parser is what
+`grammar.js` generates.
+
+**Private libdirs, checked** (`libdirs.txt`). Trunk's grammar built to
+`lib-trunk`/`lib-gtrunk` `wolf.so` sha256 `9afe1d6e…` — the same digest tl14
+recorded for trunk's parser — and the branch's to `lib-fix2`/`lib-gbranch`
+`0e88d1e9…`. The shared `~/.cache/tree-sitter/lib/wolf.so` still carries its
+2026-09-26 18:19 mtime.
+
+**The install note again.** `npm ci` on kasumi (node v26.8.1) exited 0 and left
+no `tree-sitter` binary, as at tl14; the v0.26.13 binary was fetched by URL,
+sha256 `ad369a4d…` = tl14's.
+
+**The compiler's front-end codes, for the next reader of #20.** Measured with
+the acquired 0.2.19 (`compiler/verdicts.txt`): a mode keyword in expression
+position is E0201; in binding-pattern position E0207; as an item name E0008.
+Member position accepts both words (`xs.take(2)`, `p.mut`, `s.take = 1` reach
+resolve, E0301).
+
 ## 4. Evidence index
 
-Logs on kasumi under `~/lanes/tl15/`; the clone the runs use is
-`~/lanes/tl15/ts`; the corpus is `~/lanes/tl15/wolf-lang`, a depth-1 clone
-at `v0.2.19` = `c2401f05`; the other repos are depth-1 clones under
-`~/lanes/tl15/others/`. Filled in after the runs (§4 below this line is
-the plan; the scored table replaces it).
+All logs are on kasumi under `~/lanes/tl15/`. The clone the runs used is
+`~/lanes/tl15/ts` (at `2343d27` for the red run, `2f4796c` for the gates,
+`71e5a28` for the committed-default pair) plus a trunk worktree
+`~/lanes/tl15/ts-trunk` at `7d18e44`; the corpus is `~/lanes/tl15/wolf-lang`, a
+depth-1 clone at `v0.2.19` = `c2401f05` (778 `.lu`); the other repos are
+depth-1 clones under `~/lanes/tl15/others/` (wolf-std `14f0ab2c`, boreutils
+`d7909754`, lobo `bfa9ad6a`, wolf-book `dadc38be`).
 
-| claim | artifact (planned) |
+| claim | artifact |
 |---|---|
-| ten cases red on trunk's grammar | `ts-red-trunk.log` (tests at the red commit, trunk `grammar.js`) |
-| compiler column | `compiler/verdicts.txt` (one line per shape: exit, codes) |
-| fix green, 146/146, node-types identical | `ts-generate.log`, `ts-test.log`, `node-types.diff` |
-| corpus 746, path sets equal | `gate-trunk.log`, `gate-branch.log`, `gated-paths.diff` |
-| pass-count branch red | `gate-floor-746.log`, `gate-floor-747.log` |
-| ERROR branch red, and #20's blindness | `gate-planted-trunk.log` (passes), `gate-planted-branch.log` (rc 1) |
-| other repos unchanged | `others-trunk.txt`, `others-branch.txt`, `others.diff` |
-| queries load | `queries.log` |
-| private libdirs | `lib-trunk/`, `lib-branch/` sha256 of each `wolf.so` |
-| CI at the head | the PR's run id and a `workflow_dispatch --ref tl15` run, in the PR body |
+| nine cases red on trunk's grammar | `ts-red-trunk.log` (rc 1, 9 failures, heads and blobs on line 1) |
+| compiler column | `compiler/verdicts.txt`, `compiler/<case>/out.txt` |
+| fix green, 146/146, node-types identical | `fix1-generate.log`, `fix1-test.log`, `fix1-node-types.diff` (0 bytes); `fix2-*` the same after `prec.dynamic` retires; `ts-generate.log`, `ts-test.log` at `71e5a28` |
+| `prec.dynamic` was load-bearing only without the reservation | `nodyn-trunk-test.log` (rc 1, cases 93 and 109) |
+| corpus 746, per-file verdicts identical | `gate-trunk.log`, `gate-branch.log`, `verdicts-trunk.txt`, `verdicts-branch.txt`, `verdicts.diff` |
+| pass-count branch red | `gate-floor-747.log` (rc 1), `gate-committed-shrunk.log` (rc 1); green side `gate-floor-746.log`, `gate-committed-default.log` |
+| ERROR branch red, and #20's blindness | `gate-planted-branch.log` (rc 1, `tl15_planted_take_call.lu` named); `gate-planted-trunk.log` (rc 0) |
+| other repos unchanged | `verdicts-summary.txt`, `verdicts.diff` |
+| queries load | `queries.log`, `q-*.out` |
+| private libdirs | `libdirs.txt` |
+| the receiver already met 0.2.19 | run 36740260729 (`repository_dispatch`, wolf-lang `c2401f05`, 746 gated, floor 715) |
+| CI at the head | the PR's `pull_request` run and a `workflow_dispatch --ref tl15` run, ids in the PR body |
 
 ## 5. Done-when
 
