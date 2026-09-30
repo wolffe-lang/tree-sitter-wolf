@@ -1,5 +1,32 @@
 # Changelog
 
+## tl15 — 2026-09-30 — the mode keywords, and the floor at v0.2.19
+
+**`take` and `mut` are reserved words** (#20, `[gram.inv.kw]`,
+`[gram.lex.ident]`). They were contextual keywords, so outside a mode position
+they lexed as `identifier`: `x = take (v)` parsed as a call, `let take = 1`
+bound a name, `fn take()` named a function — all refused by the compiler
+(E0201, E0207, E0008 on 0.2.19). A tree-sitter `reserved` set now returns the
+keyword in every state; member position opts out with an empty set, so
+`xs.take(2)` and `p.mut` still parse ([gram.expr.primary]'s keyword-transparent
+member). Every mode position the spec names (parameters, `self`, closure
+parameters, call and index arguments, the moded receiver, the moded store,
+`&mut`) parses to the same tree, and `src/node-types.json` is byte-identical.
+The moded store's `prec.dynamic` (tl13) retires: with `take` reserved,
+`xs[0] = take (v)` has one reading. Nine new `:error` cases were seen red on
+trunk's grammar first (a tenth, `f(take)`, already errored); 146 of 146 pass.
+
+**The floor ratchets 715 → 746** at wolf-lang `c2401f05` = `v0.2.19` = the
+default branch: 778 `.lu`, the same 32 counter-examples excluded, zero ERROR
+nodes; the per-file verdicts over all 778 corpus files and 964 files of
+wolf-std, boreutils, lobo and wolf-book are identical under the old and new
+grammar. Both failure branches were seen red: `FLOOR=747` fails "checkout
+suspect", and #20's own shape planted in the corpus passes the old grammar's
+gate and fails the new one's with the file named.
+`docs/spec-findings-tl15.md` has the contract, the prediction (five of seven
+held; both misses in the compiler column) and the evidence; the wolf-lsp half
+is wolf-lsp `docs/PIN-0219.md`.
+
 ## tl14 — 2026-09-28 — the floor at v0.2.18
 
 **The floor ratchets 675 → 715** at wolf-lang `ec56a08f` = `v0.2.18` = the
