@@ -747,3 +747,93 @@ fn main() -> !int {
                   (integer_literal)))))))
       (expression_statement
         (integer_literal)))))
+
+==================
+mode keywords in every mode position (#20)
+==================
+
+fn f(mut x: int, take y: Conn) {
+    let g = fn(mut acc, take z) acc
+    f(mut x, take y)
+    pool[mut p]
+    (take c).close()
+    xs[i] = take v
+    let r = &mut x
+}
+
+fn norm(mut self.{a}) {
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (parameter_mode)
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (parameter
+        (parameter_mode)
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (block
+      (let_declaration
+        (binder
+          (identifier)
+          (closure_expression
+            (closure_parameters
+              (closure_parameter
+                (parameter_mode)
+                (identifier))
+              (closure_parameter
+                (parameter_mode)
+                (identifier)))
+            (identifier))))
+      (expression_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (parameter_mode)
+              (identifier))
+            (argument
+              (parameter_mode)
+              (identifier)))))
+      (expression_statement
+        (index_expression
+          (identifier)
+          (parameter_mode)
+          (identifier)))
+      (expression_statement
+        (call_expression
+          (field_expression
+            (moded_receiver
+              (parameter_mode)
+              (identifier))
+            (identifier))
+          (arguments)))
+      (assignment_statement
+        (index_expression
+          (identifier)
+          (identifier))
+        (identifier))
+      (let_declaration
+        (binder
+          (identifier)
+          (reference_expression
+            (identifier))))))
+  (function_item
+    (identifier)
+    (parameters
+      (self_parameter
+        (parameter_mode)
+        (self)
+        (view_set
+          (identifier))))
+    (block)))

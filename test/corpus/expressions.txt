@@ -224,6 +224,40 @@ moded receiver before a member call
       (arguments))))
 
 ==================
+mode keywords are member names (#20, keyword-transparent member position)
+==================
+
+xs.take(2)
+p.mut
+(mut xs).take(3)
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (field_expression
+        (identifier)
+        (identifier))
+      (arguments
+        (argument
+          (integer_literal)))))
+  (expression_statement
+    (field_expression
+      (identifier)
+      (identifier)))
+  (expression_statement
+    (call_expression
+      (field_expression
+        (moded_receiver
+          (parameter_mode)
+          (identifier))
+        (identifier))
+      (arguments
+        (argument
+          (integer_literal))))))
+
+==================
 index and generic application are one postfix shape
 ==================
 

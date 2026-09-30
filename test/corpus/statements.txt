@@ -261,6 +261,163 @@ fn f() {
 
 
 ==================
+mode keyword refused (#20): a binding store
+:error
+==================
+
+fn f() {
+    x = take (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): a field store
+:error
+==================
+
+fn f() {
+    s.f = take (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): mut in the moded store
+:error
+==================
+
+fn f() {
+    xs[0] = mut (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): a let initializer
+:error
+==================
+
+fn f() {
+    let y = take (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): a bare take statement
+:error
+==================
+
+fn f() {
+    take (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): a bare mut statement
+:error
+==================
+
+fn f() {
+    mut (v)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): take as a binding name
+:error
+==================
+
+fn f() {
+    let take = 1
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): mut as a binding name
+:error
+==================
+
+fn f() {
+    let mut = 1
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): take as the whole argument
+:error
+==================
+
+fn f() {
+    f(take)
+}
+
+---
+
+
+
+==================
+mode keyword refused (#20): take as a function name
+:error
+==================
+
+fn take() {
+}
+
+---
+
+
+
+==================
+a member named take is a place; the moded store's parenthesized operand (#20)
+==================
+
+fn f() {
+    s.take = 1
+    xs[0] = take (v)
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (block
+      (assignment_statement
+        (field_expression
+          (identifier)
+          (identifier))
+        (integer_literal))
+      (assignment_statement
+        (index_expression
+          (identifier)
+          (integer_literal))
+        (parenthesized_expression
+          (identifier))))))
+
+==================
 defer and errdefer
 ==================
 
