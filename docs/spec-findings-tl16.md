@@ -100,6 +100,38 @@ no red-first grammar case and no `node-types.json` claim beyond identity.
    count is **above** 829 and the floor still passes; the number is reported
    either way. *Falsifier:* a red gate, or a count below 829.
 
+## 3, scored (written after the measurement; the section above is unedited since `e2778ad`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | 829 gated, 32 excluded, zero ERROR nodes at trunk's grammar, floor 746 | `gate-trunk.log` (head `1834e73`, script blob `2f2cfcc6`, corpus `cdde128a`, `FLOOR env: unset`, libdir `lib-gate`): `829 files gated, 32 parse-tier counter-examples excluded` / `PASS … (829 files, floor 746)`, rc 0 | **yes** |
+| 2 | every one of the 861 parses `ok`; against tl15's 778: 0 removed, 0 changed, exactly the 83 added | `verdicts-corpus.txt`: 861 lines, **16 `ERR`** — the fifteen `corpus/grammar/*` parse-tier counter-examples (`char_uni_seven_digits`, `closure_params_no_separator`, `if_then_let_body`, `if_then_missing`, `let_group_bare_tuple`, `let_group_one_init`, `match_range_open`, `newline_leading`, `range_bare`, `str_bare_brace`, `str_dollar_brace`, `struct_literal_no_separator`, `struct_pattern_no_separator`, `struct_pattern_rest_bare`, `tuple_pattern_no_separator`) and `resolve/broken_sibling/mangled.lu`, every one excluded by directive and every one `ERR` in tl15's file too. `verdicts-compare.txt`: `only tl15 (removed)` empty, `same path, different verdict` empty, `added 83 removed 0` | **no, on the first clause — 16 of 861 are `ERR`, as they were at tl15 and as the gate's own exclusion rule says they must be; the path-set comparison held in full.** I wrote "every one" from the gate's PASS line and forgot that the gate skips the counter-examples before parsing; the verdict run does not |
+| 3 | all 83 added files and the 2 modified parse clean | `verdicts-added.txt`: 83 lines, `ok 83, ERR 0` (76 `memory/`, 7 `rows/`); `memory/elem_dyn_read_after_mut.lu` and `memory/mut_read_overlap.lu` `ok` | **yes** — no new construct the grammar cannot parse |
+| 4 | `src/` byte-identical after `generate`; 146/146; queries load | `ts-generate.log` at `76a9c05`: `generate rc 0` / `src diff rc 0`, ABI 15, `MAX_RESERVED_WORD_SET_SIZE 2`; `ts-test.log`: `Total parses: 146; successful parses: 146`, rc 0; `queries-head.log`: highlights rc 0 (222 lines), locals rc 0 (92), injections rc 0 (6) | **yes** |
+| 5 | committed default green at 829; `FLOOR=830` red; shrunk red; planted red with the file named | `gate-committed-default.log` (script blob `ebaf7c77`, `FLOOR env: unset`): `PASS … (829 files, floor 829)`, rc 0. `gate-floor-830.log`: `FAIL: only 829 file(s) gated — the floor is 830; checkout suspect`, rc 1. `gate-committed-shrunk.log` (`memory/mut_claim_two_phase_reads.lu` removed from a scratch copy): `828 files gated` / `FAIL: only 828 file(s) gated — the floor is 829; checkout suspect`, rc 1. `gate-planted.log` (`fn main() -> !int { let ( = }` as `tl16_planted_bad_let.lu`): `830 files gated` / `FAIL: 1 file(s) with ERROR/MISSING nodes:` / `…/planted-corpus/tl16_planted_bad_let.lu`, rc 1 | **yes** |
+| 6 | CI green at the head, `829 files gated`, `floor 829` | the run ids and the gated count are in the PR body (written after the push) | — |
+
+Four of five scored; the miss is a sentence, not a number — the measurement
+underneath it (the 16 ERRs are tl15's 16, excluded by directive) is what the
+comparison exists to show.
+
+**Private libdirs, checked** (`libdirs.txt`). Trunk's grammar built to
+`lib-gate` and the ratchet head's to `lib-head`, both `wolf.so` sha256
+`0e88d1e9…` — the digest tl15 recorded for its branch parser, which is what
+trunk's parser has been since the merge. The shared
+`~/.cache/tree-sitter/lib/wolf.so` still carries its 2026-09-26 18:19 mtime.
+
+**The install note, a third time.** `npm ci` on kasumi (node v26.8.1) exited 0
+and left no `tree-sitter` binary (tl14, tl15); the v0.26.13 binary was fetched
+by URL, sha256 `ad369a4d…` = tl14's and tl15's (`setup.log`).
+
+### §2 corrected after the commit (drift in my own inputs; §2 left as committed)
+
+- `grammar.js` was described as "blob `6c4c7687…`'s successor" — a lazy
+  spelling. The measured fact is simpler: `grammar.js`, `src/` and
+  `queries/` are untouched by this lane, and `tree-sitter generate` at the
+  head leaves `src/` byte-identical (`ts-generate.log`).
+
 ## 4. Evidence index
 
 All logs are on kasumi under `~/lanes/tl16/`. The clone the runs use is
@@ -116,8 +148,8 @@ the same parser bytes); the tree-sitter binary is
 | the acquisition: archive digests, `wolf --version`, the tree-sitter binary's sha | `setup.log`, `npm-ci.log` |
 | 829 gated at trunk's grammar | `gate-trunk.log` (rc 0, heads on line 1) |
 | per-file verdicts, 861 corpus files | `verdicts-corpus.txt`; the comparison with tl15's: `verdicts-compare.txt` (added / removed / changed path lists), `verdicts-added.txt` = the 83 |
-| the 83 new files by name, each `ok` | `verdicts-added.txt` |
-| generate leaves `src/` identical; 146/146; queries load | `ts-generate.log`, `ts-test.log`, `queries.log`, `q-*.out` |
+| the 83 new files by name, each `ok`; the 16 `ERR` are tl15's 16 | `verdicts-added.txt`, `verdicts-corpus.txt`, `tl15-corpus-verdicts.txt` |
+| generate leaves `src/` identical; 146/146; queries load | `ts-generate.log`, `ts-test.log` (at `76a9c05`); `queries.log`, `q-*.out` (trunk's grammar), `queries-head.log`, `q-head-*.out` (the head) |
 | committed default green at 829 | `gate-committed-default.log` (rc 0) |
 | pass-count branch red | `gate-floor-830.log` (rc 1), `gate-committed-shrunk.log` (rc 1) |
 | ERROR branch red, the file named | `gate-planted.log` (rc 1) |
