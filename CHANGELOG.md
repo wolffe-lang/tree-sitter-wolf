@@ -1,5 +1,27 @@
 # Changelog
 
+## tl16 — 2026-10-02 — the floor at v0.2.20
+
+**The floor ratchets 746 → 829** at wolf-lang `cdde128a` = `v0.2.20`: 861
+`.lu`, the same 32 parse-tier counter-examples excluded, zero ERROR nodes, with
+a private `TREE_SITTER_LIBDIR`. wolf-lang's default branch had moved past the
+tag (s195) by the time the lane ran, but its `corpus/` and `spec/` are
+byte-identical to the tag's, so the gate's checkout and the tag gate the same
+829. The 83 new corpus files (s186, s187, s189–s194, eg03: 76 `corpus/memory/`,
+7 `corpus/rows/`) are all gated and all parse; the per-file verdicts over the
+778 files both tags share are identical to tl15's, compared as path sets both
+ways. **The grammar did not move**: `spec/grammar.ebnf` is blob `3f24d076` at
+v0.2.18, v0.2.19 and v0.2.20 — the cut's two rulings, `[mem.tier0.excl.4]`
+(two-phase arguments) and `[type.row.else]` (an `else` handles its scrutinee's
+own row), are semantics over spellings the grammar already parsed, and
+`01-grammar.md`'s one hunk is prose under the struct-literal production —
+`tree-sitter generate` leaves `src/` byte-identical, 146 of 146 corpus tests.
+Both failure branches were seen red: `FLOOR=830` fails "checkout suspect", a
+shrunk corpus fails the committed default, and a planted `let ( =` fails with
+the file named. `docs/spec-findings-tl16.md` has the contract, the prediction
+(four of five held; the miss is a sentence about the counter-examples) and the
+evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0220.md`.
+
 ## tl15 — 2026-09-30 — the mode keywords, and the floor at v0.2.19
 
 **`take` and `mut` are reserved words** (#20, `[gram.inv.kw]`,
