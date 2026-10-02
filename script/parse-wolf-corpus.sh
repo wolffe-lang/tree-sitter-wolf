@@ -182,12 +182,32 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # the old grammar — the blindness #20 names — and `FAIL: 1 file(s)`, the
 # file named, under the new one.
 #
+# Re-measured 829 at v0.2.20 = `cdde128a` (2026-10-02, tl16) — 861 `.lu`
+# files, the same 32 parse-tier counter-examples excluded, zero ERROR
+# nodes, with a private TREE_SITTER_LIBDIR. wolf-lang's default branch had
+# moved past the tag (s195, `6a57f943`) by the time this was written, but
+# `git diff v0.2.20 origin/trunk -- corpus/ spec/` is empty, so the tag and
+# the checkout gate the same 829. The corpus grew 83 files over
+# v0.2.19..v0.2.20 (s186, s187, s189–s194, eg03: 76 `corpus/memory/`, 7
+# `corpus/rows/`; none carries a parse-tier directive), and the receiver's
+# release dispatch (run 36955900148) had already gated the same 829 against
+# the old floor. The grammar did not move: `spec/grammar.ebnf` is blob
+# `3f24d076` at v0.2.18, v0.2.19 and v0.2.20 (the cut's two rulings,
+# `[mem.tier0.excl.4]` and `[type.row.else]`, are semantics over spellings
+# the grammar already parsed), and the per-file verdicts over the 778 files
+# both tags share are identical to tl15's, compared as path sets both ways
+# (0 removed, 0 changed, exactly the 83 added, all parsing clean). Witnessed
+# at the boundary: FLOOR=829 passes, FLOOR=830 fails "checkout suspect" on
+# the same 829 files; and the ERROR branch on a scratch copy with
+# `fn main() -> !int { let ( = }` planted: 830 gated, `FAIL: 1 file(s)`, the
+# file named.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-746}"
+FLOOR="${FLOOR:-829}"
 
 total=0
 skipped=0
