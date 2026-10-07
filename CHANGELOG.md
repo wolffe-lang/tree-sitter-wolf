@@ -1,5 +1,24 @@
 # Changelog
 
+## tl18 — 2026-10-07 — `extern "c" let`, and the floor at v0.2.25
+
+**The grammar learns `extern "c" let NAME: T`** (`extern_let_declaration`,
+wolf-lang kw09 `231219b6`, v0.2.23, `[abi.link.extern]`): the one production
+the EBNF gained since v0.2.20 (`extern_let_item ::= 'extern' STRING 'let'
+IDENT ':' type TERM`). Without it the receiver had been red on trunk from the
+v0.2.23 dispatch (run 37211326706) through v0.2.25's (run 37679728322), on
+`corpus/membrane/extern_let_image.lu` and `extern_let_not_ptr.lu`
+(tree-sitter-wolf#25). The case was seen red on trunk's grammar first (146 of
+147), then 147 of 147; no conflict declared; `locals.scm` names the binding
+as a definition; `highlights.scm` is unchanged (`extern`, `let`, the ABI
+string and the type already capture). **The floor ratchets 829 → 969** at
+`6710f9e0` = `v0.2.25`: 1007 `.lu`, 38 parse-tier counter-examples excluded
+(tl16's 32 plus s203's six `rows/negative/first_*`), zero ERROR nodes. Per-file
+verdicts against tl16's: 0 removed, 0 changed, 146 added; the rule moves
+exactly the two files. Both failure branches seen red. `docs/spec-findings-tl18.md`
+has the contract, the prediction (five of six held; the miss is a capture
+count) and the evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0225.md`.
+
 ## tl16 — 2026-10-02 — the floor at v0.2.20
 
 **The floor ratchets 746 → 829** at wolf-lang `cdde128a` = `v0.2.20`: 861
