@@ -202,12 +202,28 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # `fn main() -> !int { let ( = }` planted: 830 gated, `FAIL: 1 file(s)`, the
 # file named.
 #
+# Re-measured 969 at v0.2.25 = `6710f9e0` (2026-10-07, tl18) — 1007 `.lu`
+# files, 38 parse-tier counter-examples excluded (tl16's 32 plus s203's six
+# `rows/negative/first_*`, ruling #28), zero ERROR nodes, with a private
+# TREE_SITTER_LIBDIR. Five releases since tl16: 146 files added, 5
+# modified, 0 removed. The grammar DID move this time: v0.2.23 (kw09,
+# wolf-lang `231219b6`) added `extern_let_item ::= 'extern' STRING 'let'
+# IDENT ':' type TERM`, and the receiver went red on its two corpus files
+# (`membrane/extern_let_image.lu`, `membrane/extern_let_not_ptr.lu`) from
+# the v0.2.23 dispatch (run 37211326706) through v0.2.25's (run
+# 37679728322) — tree-sitter-wolf#25. The rule `extern_let_declaration`
+# parses both; no other file's verdict moves. Witnessed at the boundary:
+# FLOOR=969 passes, FLOOR=970 fails "checkout suspect" on the same 969
+# files; and the ERROR branch on a scratch copy with
+# `fn main() -> !int { let ( = }` planted: 970 gated, `FAIL: 1 file(s)`,
+# the file named.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-829}"
+FLOOR="${FLOOR:-969}"
 
 total=0
 skipped=0
