@@ -26,6 +26,7 @@
 (field_pattern !pattern name: (identifier) @local.definition.var)
 (field_pattern pattern: (identifier) @local.definition.var)
 (const_declaration name: (identifier) @local.definition.constant)
+(extern_let_declaration name: (identifier) @local.definition.var)
 (for_expression pattern: (identifier) @local.definition.var)
 (for_expression pattern: (tuple_pattern (identifier) @local.definition.var))
 (at_pattern binding: (identifier) @local.definition.var)
