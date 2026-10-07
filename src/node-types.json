@@ -2141,6 +2141,10 @@
           "named": true
         },
         {
+          "type": "extern_let_declaration",
+          "named": true
+        },
+        {
           "type": "function_item",
           "named": true
         },
@@ -5235,6 +5239,100 @@
         },
         {
           "type": "while_expression",
+          "named": true
+        }
+      ]
+    }
+  },
+  {
+    "type": "extern_let_declaration",
+    "named": true,
+    "fields": {
+      "abi": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "string_literal",
+            "named": true
+          }
+        ]
+      },
+      "name": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "identifier",
+            "named": true
+          }
+        ]
+      },
+      "type": {
+        "multiple": false,
+        "required": true,
+        "types": [
+          {
+            "type": "aliased_error_type",
+            "named": true
+          },
+          {
+            "type": "dyn_type",
+            "named": true
+          },
+          {
+            "type": "error_union_type",
+            "named": true
+          },
+          {
+            "type": "function_type",
+            "named": true
+          },
+          {
+            "type": "pointer_type",
+            "named": true
+          },
+          {
+            "type": "prefixed_type",
+            "named": true
+          },
+          {
+            "type": "region_type",
+            "named": true
+          },
+          {
+            "type": "rowed_type",
+            "named": true
+          },
+          {
+            "type": "tuple_type",
+            "named": true
+          },
+          {
+            "type": "type_keyword",
+            "named": true
+          },
+          {
+            "type": "type_path",
+            "named": true
+          },
+          {
+            "type": "unit_type",
+            "named": true
+          }
+        ]
+      }
+    },
+    "children": {
+      "multiple": true,
+      "required": false,
+      "types": [
+        {
+          "type": "attribute",
+          "named": true
+        },
+        {
+          "type": "visibility_modifier",
           "named": true
         }
       ]
@@ -11922,6 +12020,10 @@
         },
         {
           "type": "expression_statement",
+          "named": true
+        },
+        {
+          "type": "extern_let_declaration",
           "named": true
         },
         {

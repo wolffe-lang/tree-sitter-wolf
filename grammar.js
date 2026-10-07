@@ -192,6 +192,7 @@ module.exports = grammar({
       $.let_declaration,
       $.var_declaration,
       $.const_declaration,
+      $.extern_let_declaration,
       $.error_item,
       $.assignment_statement,
       $.defer_statement,
@@ -381,6 +382,26 @@ module.exports = grammar({
       optional(seq(':', field('type', $._type))),
       '=',
       field('value', $._expression),
+    ),
+
+    // `extern "c" let NAME: T` (kw09, wolf-lang `231219b6`, v0.2.23;
+    // [abi.link.extern]): a bodyless binding the link defines — its value
+    // is the symbol's address, so sema wants a raw pointer type (E0821
+    // otherwise; not the grammar's business). The EBNF's whole production:
+    // `extern_let_item ::= 'extern' STRING 'let' IDENT ':' type TERM`,
+    // reached through `item ::= attribute* visibility? bare_item`. It
+    // shares the `extern STRING` prefix with `function_qualifier`; one
+    // token of lookahead (`let` against `fn`/`comptime`/`export`/`extern`)
+    // decides, so no conflict is declared.
+    extern_let_declaration: $ => seq(
+      repeat($.attribute),
+      optional($.visibility_modifier),
+      'extern',
+      field('abi', $.string_literal),
+      'let',
+      field('name', $.identifier),
+      ':',
+      field('type', $._type),
     ),
 
     // ---------------------------------------------- types [gram.item.type]
