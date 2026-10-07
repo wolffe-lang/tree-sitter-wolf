@@ -129,6 +129,55 @@ extern "c" fn malloc(size: usize) -> *u8
           (identifier))))))
 
 ==================
+extern let: a bodyless binding the link defines (kw09, [abi.link.extern])
+==================
+
+#[cfg(target = "x86_64-unknown-linux-gnu")]
+extern "c" let __ehdr_start: *u8
+pub extern "c" let __kernel_end: int
+extern "c" fn malloc(size: usize) -> *u8
+
+---
+
+(source_file
+  (extern_let_declaration
+    (attribute
+      (attr_item
+        (path
+          (identifier))
+        (attr_item
+          (path
+            (identifier))
+          (string_literal))))
+    (string_literal)
+    (identifier)
+    (pointer_type
+      (type_path
+        (path
+          (identifier)))))
+  (extern_let_declaration
+    (visibility_modifier)
+    (string_literal)
+    (identifier)
+    (type_path
+      (path
+        (identifier))))
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (pointer_type
+      (type_path
+        (path
+          (identifier))))))
+
+==================
 comptime and export qualifiers
 ==================
 
