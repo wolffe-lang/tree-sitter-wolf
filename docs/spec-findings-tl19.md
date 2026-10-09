@@ -134,3 +134,65 @@ green gate at trunk's grammar are §2 inputs (the receiver printed them).
    planted break goes red in CI**: one commit dropping `never` from the
    pattern reds the `corpus tests` step (`tree-sitter test`, the highlight
    assertion) in its own `pull_request` run; its revert is green.
+
+## 3, scored (written after the measurement; §1–§3 above are unedited since `aa806a1`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | path sets against tl18's: 0 removed, 0 changed, 50 added, all `ok`; `ERR` 22 | `g1/verdicts-compare.txt` (head `aa806a1`, corpus `89dc1394`): `tl18 paths 1007; now 1057; ERR now 22`, `only tl18 (removed)` empty, `same path, different verdict` empty, `added 50; added-ok 50; added-ERR:` empty. The trunk grammar's gate: `g1/gate-trunk.log` `1019 files gated, 38 … excluded` / `PASS … (1019 files, floor 969)`, rc 0 — the receiver's 37963437735 reproduced | **yes** |
+| 2 | the trees are the compiler's | `g1/trees.txt`: `-> never` is `return_type: (type_path (path (identifier)))` with a body (`fn_never_trap.lu` rows 10, 15) and bodyless after `(function_qualifier (string_literal))` (`fn_never_extern.lu` row 10); every `copy region scratch { … }` is `(unary_expression operand: (region_expression name: (identifier) body: (block …)))` (`region_copyout_binding.lu` row 10, `region_copyout_exits.lu` rows 21 and 32); `!` on an integer is `(unary_expression operand: …)` in a `const` value, a `let`, under `&`, and inside `(interpolation …)` (`int_not_signed.lu`, `int_not_mask.lu`); no `ERROR`, no `MISSING`. (The default `parse` output hides anonymous nodes, so the operator's spelling is read off the source span: `[10, 12]` is the `c` of `copy`.) | **yes** |
+| 3 | three corpus cases pin those trees and pass at trunk's grammar; `generate` inert | at `8dee475`: `g2/pins-generate.log` `src diff rc 0`; `g2/pins-test.log` **149 of 150** — the integer-complement case failed, and the diff was one closing parenthesis too many in MY expected text (13 nodes deep, 14 `)` written), not a tree difference. Fixed in `fd97027`; `g3/ts-test.log` and `g4/ts-test.log`: `Total parses: 150; successful parses: 150` | **trees yes; my expected text no** (one miscounted paren) |
+| 4 | a highlight test red at trunk's queries, green after the `never` pattern | **No test could say it.** `test/highlight/never.lu` failed identically under trunk's queries and the head's (`g3/`, `g4/ts-test-trunk-queries.log` and `g4/ts-test.log`: `Failure - row: 1, column: 28, expected highlight 'type.builtin', actual highlights: 'comment.line'`), because this grammar starts every line comment that follows a newline at the END of the previous line (`g4/comment-ranges.txt`: `// a` on row 1 parses as `(line_comment [0, 15] - [1, 4])`), and the CLI places an assertion from the comment node's start (`parse_position_comments`, tree-sitter v0.26.13). The first prose fix (`ac542e7`, no capture name in the header) moved nothing, which is what showed the cause was the ranges. The test retired in `bedb686`; filed **tree-sitter-wolf#27**. The pattern itself is measured by #5 | **no** |
+| 5 | captures move only where `never` is a type: +1, +1, +1, +1, +2 on the five `fn_never_*`; locals identical | `g2/captures-diff.txt` (g1's trunk queries vs the head's `adb7c6b` queries, one parser, all 1057 files): exactly `fn_never_extern.lu 87→88`, `fn_never_handler_arm.lu 111→112`, `fn_never_reaches_end.lu 41→42`, `fn_never_return.lu 47→48`, `fn_never_trap.lu 118→120`, locals unchanged on all five, no other file; `g2/never-captures.txt`: `never` at (10,20) and (15,13) captures `type.builtin` beside the generic `type`; `g2/queries-head.log`: highlights, locals, injections rc 0 | **yes** |
+| 6 | default green at 1019; `FLOOR=1020` red; shrunk red; planted red | at `8452337` (script blob `e8ec7ac5`): `g2/gate-committed-default.log` `PASS … (1019 files, floor 1019)`, rc 0; `g2/gate-floor-1020.log` `FAIL: only 1019 file(s) gated — the floor is 1020; checkout suspect`, rc 1; `g2/gate-committed-shrunk.log` (`typecheck/fn_never_trap.lu` removed from a scratch copy) `1018 files gated` / `FAIL: only 1018 … floor is 1019`, rc 1; `g2/gate-planted.log` `1020 files gated` / `FAIL: 1 file(s) …` / `…/tl19_planted_bad_let.lu`, rc 1; `g2/verdicts-diff.txt` `head ERR 22 g1 ERR 22`, diff rc 0 | **yes** |
+| 7 | CI green at the head; the planted break red via the highlight test | the highlight test is gone (#4), so the plant moves to the gate this lane did touch: the committed floor. Run ids in the PR body | — (see the PR) |
+
+Four of six scored held; one held on the trees but not on my own expected
+text; one (#4) could not be measured by the instrument I chose, for a reason
+outside this lane's change, now filed. What a reader in helix or zed sees
+change: `never` paints as a builtin type in `-> never` (and nowhere else),
+the way `range` paints; `copy region`, `-> never` and `!` on an integer
+parsed clean before this lane and still do, and are now pinned by corpus
+cases.
+
+**Private libdirs, checked** (`g1/libdirs.txt`, `g2/libdirs.txt`). Trunk's
+grammar built to `lib-trunk`, the head's to `lib-head`; both `wolf.so`
+`f3bc57d8…`, the digest tl18 recorded for `66a677f0` (`src/` did not move).
+The shared `~/.cache/tree-sitter/lib/wolf.so` still carries its 2026-09-26
+18:19 mtime.
+
+### §2 corrected after the commit
+
+- None of §2's numbers moved. The contract's "rules for the new syntax" is
+  the drift §2 names: no rule is owed; corpus cases pin the trees.
+- The acquisition-before-prediction deviation is disclosed above §1.
+
+## 4. Evidence index
+
+All logs are on kasumi under `~/lanes/tl19/`. The clone the runs use is
+`~/lanes/tl19/ts`; the corpus is `~/lanes/tl19/wolf-lang`, a depth-1 clone at
+`v0.2.26` = `89dc1394` (1057 `.lu`); the tree-sitter binary is
+`~/lanes/tl19/tsbin/tree-sitter` (`setup.log` carries its digest).
+
+| claim | artifact |
+|---|---|
+| the acquisition: archive digests = the API's, members by name, `wolf --version`, `wolf prelude --json` = the tag's blob | `setup.log`, `acquire/members.txt` |
+| trunk's grammar over 0.2.26: 1019 gated, PASS; verdicts against tl18's | `g1/gate-trunk.log`, `g1/verdicts.txt`, `g1/verdicts-compare.txt`, `tl18-verdicts-head.txt`; receiver run 37963437735 |
+| the trees | `g1/trees.txt` |
+| corpus cases: 149/150 on my paren, then 150/150; `generate` inert | `g2/pins-test.log`, `g2/pins-generate.log`, `g3/ts-test.log`, `g4/ts-test.log` |
+| the highlight test that could not assert, and why | `g3/`, `g4/ts-test.log`, `g4/ts-test-trunk-queries.log`, `g4/comment-ranges.txt`; tree-sitter-wolf#27 |
+| captures move only on the five `fn_never_*` | `g1/captures.txt`, `g2/captures-head.txt`, `g2/captures-diff.txt`, `g2/never-captures.txt`, `g2/queries-head.log` |
+| the gate's three branches at the ratchet | `g2/gate-committed-default.log`, `g2/gate-floor-1020.log`, `g2/gate-committed-shrunk.log`, `g2/gate-planted.log`, `g2/verdicts-diff.txt` |
+| commits | `aa806a1` (this contract), `8dee475` (corpus cases), `18a7fd7` (the highlight test), `adb7c6b` (the `never` pattern), `8452337` (the ratchet), `fd97027` (the paren), `ac542e7` (the test's prose), `bedb686` (the test retires) |
+| CI at the head; the planted red | run ids in the PR body |
+
+## 5. Done-when
+
+- branch `tl19` on origin; PR open, unmerged, its body carrying the five
+  sections, commit-hash bullets and a test checklist; CI green at the head
+  sha, read with `gh run view`; the planted red's run id cited
+- this §3 commit precedes every test, query and ratchet commit
+- no attribution trailers
+- the worktree removed; `~/lanes/tl19/` pruned to its logs; no orphan
+  process
+- listed to close (not closed by this lane): none; filed tree-sitter-wolf#27
