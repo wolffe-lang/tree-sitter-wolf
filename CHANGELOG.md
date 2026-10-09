@@ -1,5 +1,25 @@
 # Changelog
 
+## tl19 — 2026-10-09 — the floor at v0.2.26, and `never` painted
+
+**`never` paints `@type.builtin` in type position** (`-> never`, s213,
+ruling #50), scoped to a one-segment `type_path` as `range` is: wolf
+publishes it as a `builtin_type` at v0.2.26 and exempts a binding named
+`never` from W0304, and wolf-std binds one, so it stays out of the closed
+any-position list. On the 0.2.26 corpus the head's highlights capture one
+more exactly where `never` is a type (five `typecheck/fn_never_*` files,
+six sites) and the same everywhere else. **No rule moved**: `spec/grammar.ebnf`
+is the same blob at v0.2.25 and v0.2.26, and `-> never`, `!` on an integer
+(#51) and `copy region { … }` (#56) parse as the name, the unary operator and
+the `copy` prefix over a region block the grammar already had — three corpus
+cases pin those trees (150 of 150). **The floor ratchets 969 → 1019** at
+`89dc1394` = `v0.2.26`: 1057 `.lu`, the same 38 excluded, zero ERROR nodes;
+per-file verdicts against tl18's: 0 removed, 0 changed, 50 added, all clean;
+both failure branches seen red. A first highlight test could not assert
+because line comments start at the previous line's end (#27).
+`docs/spec-findings-tl19.md` has the contract, the prediction (four of six
+held) and the evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0226.md`.
+
 ## tl18 — 2026-10-07 — `extern "c" let`, and the floor at v0.2.25
 
 **The grammar learns `extern "c" let NAME: T`** (`extern_let_declaration`,
