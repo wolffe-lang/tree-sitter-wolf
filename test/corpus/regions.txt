@@ -168,3 +168,38 @@ fn m() {
             strategy: (region_strategy)
             cap: (region_cap
               value: (identifier))))))))
+
+==================
+copy region: the block's value is copied out (s216, ruling #56)
+==================
+
+let v = copy region scratch {
+    build()
+}
+
+let w = copy region { "x" + n }
+
+---
+
+(source_file
+  (let_declaration
+    (binder
+      (identifier)
+      (unary_expression
+        (region_expression
+          (identifier)
+          (block
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments))))))))
+  (let_declaration
+    (binder
+      (identifier)
+      (unary_expression
+        (region_expression
+          (block
+            (expression_statement
+              (binary_expression
+                (string_literal)
+                (identifier)))))))))

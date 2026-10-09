@@ -841,3 +841,46 @@ fn f() -> !int {
           (integer_literal)))
       (expression_statement
         (integer_literal)))))
+
+==================
+! on an integer: the bitwise complement (s213, ruling #51)
+==================
+
+const MASK: u32 = !0xfff
+let down = x & !0xfff
+print("{!x} {!(0 as u32)}")
+
+---
+
+(source_file
+  (const_declaration
+    (identifier)
+    (type_path
+      (path
+        (identifier)))
+    (unary_expression
+      (integer_literal)))
+  (let_declaration
+    (binder
+      (identifier)
+      (binary_expression
+        (identifier)
+        (unary_expression
+          (integer_literal)))))
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (string_literal
+            (interpolation
+              (unary_expression
+                (identifier)))
+            (interpolation
+              (unary_expression
+                (parenthesized_expression
+                  (cast_expression
+                    (integer_literal)
+                    (type_path
+                      (path
+                        (identifier))))))))))))))

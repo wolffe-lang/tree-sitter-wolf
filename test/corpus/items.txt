@@ -886,3 +886,43 @@ fn norm(mut self.{a}) {
         (view_set
           (identifier))))
     (block)))
+
+==================
+-> never: the bottom type is a name in return position (s213, ruling #50)
+==================
+
+fn die(msg: str) -> never {
+    trap(msg)
+}
+
+extern "c" fn abort() -> never
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (call_expression
+          (identifier)
+          (arguments
+            (argument
+              (identifier)))))))
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters)
+    (type_path
+      (path
+        (identifier)))))
