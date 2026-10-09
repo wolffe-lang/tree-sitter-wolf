@@ -883,4 +883,4 @@ print("{!x} {!(0 as u32)}")
                     (integer_literal)
                     (type_path
                       (path
-                        (identifier))))))))))))))
+                        (identifier)))))))))))))
