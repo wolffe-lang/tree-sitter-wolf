@@ -1,0 +1,17 @@
+// `never` (s213, ruling #50) is a builtin type written only as a fn's
+// return type; it paints @type.builtin there and nowhere else.
+
+fn die(msg: str) -> never {
+//                  ^ type.builtin
+    trap(msg)
+}
+
+extern "c" fn abort() -> never
+//                       ^ type.builtin
+
+fn main() -> !int {
+    let never = 1
+    //  ^ !type.builtin
+    never
+//  ^ !type.builtin
+}
