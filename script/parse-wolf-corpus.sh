@@ -218,12 +218,29 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # `fn main() -> !int { let ( = }` planted: 970 gated, `FAIL: 1 file(s)`,
 # the file named.
 #
+# Re-measured 1019 at v0.2.26 = `89dc1394` (2026-10-09, tl19) — 1057 `.lu`
+# files, the same 38 parse-tier counter-examples excluded, zero ERROR nodes,
+# with a private TREE_SITTER_LIBDIR. One release since tl18: 50 files added
+# (31 memory, 9 typecheck, 4 comptime, 3 os, 3 fs), 0 modified, 0 removed,
+# none of the 50 excluded. The grammar did not move: `spec/grammar.ebnf` is
+# blob `29d5de10` at v0.2.25 and v0.2.26, and the cut's three spellings —
+# `-> never` (ruling #50), `!` on an integer (#51), `copy region { … }`
+# (#56) — parse as the name, the unary operator and the `copy` prefix over a
+# region block this grammar already had; the receiver at the tag (run
+# 37963437735) gated all 1019 green against the old floor. Per-file verdicts
+# against tl18's: 0 removed, 0 changed, exactly the 50 added, all clean.
+# Witnessed at the boundary: FLOOR=1019 passes, FLOOR=1020 fails "checkout
+# suspect" on the same 1019 files; a shrunk copy fails the committed
+# default; and the ERROR branch on a scratch copy with
+# `fn main() -> !int { let ( = }` planted: 1020 gated, `FAIL: 1 file(s)`,
+# the file named.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-969}"
+FLOOR="${FLOOR:-1019}"
 
 total=0
 skipped=0
