@@ -91,9 +91,75 @@ gate at trunk's grammar are §2 inputs (the receiver printed them).
    cannot pass by accident) reds the `wolf-lang corpus at zero ERRORs` step
    with `the floor is 2000`; its revert is green.
 
+## 3, scored (written after the measurement; §1–§3 above are unedited since `3b95c0b`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | path sets against tl19's: 0 removed, 0 changed, 73 added, all `ok`; `ERR` 22; 1130 paths | `g1/verdicts-compare.txt` (head `3b95c0b`, corpus `6ffe7c60`): `tl19 paths 1057; now 1130; ERR now 22`, `only tl19 (removed)` empty, `same path, different verdict` empty, `added 73; added-ok 73; added-ERR:` empty. The trunk grammar's gate, `g1/gate-trunk.log`: `1092 files gated, 38 … excluded` / `PASS … (1092 files, floor 1019)`, rc 0 — the receiver's 38315479145 reproduced | **yes** |
+| 2 | `generate` inert; 150 of 150; the three queries load; nothing under `grammar.js`, `src/`, `queries/`, `test/` changes | `g1/ts-generate.log` and `g2/ts-generate.log`: `generate rc 0`, `src diff rc 0`; `g1/ts-test.log`, `g2/ts-test.log`: `Total parses: 150; successful parses: 150`; `g2/queries.log`: highlights, locals, injections rc 0; `g2/head.txt`: `src` tree `e8d4fd5e`, `queries` tree `cf647eb2`, `test` tree `884d5bfa`, `grammar.js` blob `2cac20e7`, each equal to `e7388233`'s; `g2/diff-vs-trunk.stat`: this file and `script/parse-wolf-corpus.sh` only | **yes** |
+| 3 | the 30 new names parse as calls and each captures `function`; no `function.builtin` anywhere | `g1/new-names.txt`: the tag's list (blob `f0fd9c54`) minus the v0.2.26 list (blob `21a2561c`) is 30 names, `30 function`; `g1/calls.lu` (one call a line, `print("x")` as the control) parses with 0 `ERROR`/`MISSING` (`g1/calls-tree.txt`, rc 0); `g1/calls-summary.txt`: every one of the 30 callees captures `function` exactly once, `print` the same, `function.builtin captures anywhere: 0`. The CLI's `query` also lists the fallback `(identifier) @variable` match on each callee, for `print` too (two lines a name; a first-match-wins engine shows `function`), which my summary line counted as "not exactly one capture" for all 31: the check I wrote was stricter than the prediction, the prediction's own terms hold | **yes** |
+| 4 | default green at 1092; `FLOOR=1093` red; shrunk red; planted red | at `83cf07d` (script blob `ba6256cc`): `g2/gate-committed-default.log` `PASS … (1092 files, floor 1092)`, rc 0; `g2/gate-floor-1093.log` `FAIL: only 1092 file(s) gated — the floor is 1093; checkout suspect`, rc 1; `g2/gate-committed-shrunk.log` (`os/signal_shell_rows.lu` removed from a scratch copy) `1091 files gated` / `FAIL: only 1091 … floor is 1092`, rc 1; `g2/gate-planted.log` `1093 files gated` / `FAIL: 1 file(s) …` / `…/tl20_planted_bad_let.lu`, rc 1; `g2/verdicts-diff.txt` `head ERR 22 g1 ERR 22`, diff rc 0 | **yes** |
+| 5 | CI green at the head gating wolf-lang's trunk at floor 1092; the floor-2000 plant red | run ids in the PR body | — (see the PR) |
+
+Four of four scored before CI held. **What a reader in helix or zed sees
+change: nothing.** Three releases added no syntax; their thirty new builtins
+are calls and paint as calls, as `print` always has. What changed here is the
+floor, 1019 → 1092, so the gate cannot lose the 73 files the three releases
+added without saying so.
+
+**The names, by release, from `spec/prelude.json` at the tags (all
+`function`, none painted as a builtin by any pattern):** 0.2.27 — `fs_stat`,
+`fs_lstat`, `fs_read_link`, `fs_read_dir_entries`, `env_unset`, `os_exec`,
+`os_signal_ignore`, `os_signal_default`, `os_signal_poll`, `os_spawn_job`,
+`os_proc_pid`, `os_wait_status`, `os_pgid`, `os_term_foreground`,
+`os_term_set_foreground`, `os_term_mode`, `os_term_set_mode`; 0.2.28 —
+`fs_set_mode`, `fs_open_perm`, `fs_create_dir_mode`, `fs_symlink`,
+`fs_link`, `fs_set_times`, `fs_truncate`, `os_umask`; 0.2.29 —
+`os_signal_ignored`, `os_signal_send`, `os_signal_number`, `os_pid`,
+`os_ppid`. wolf-lang's trunk adds `os_term_size`, `os_term_chars` and
+`os_signal_wait_fd`, which no release carries and nothing here names.
+
+**A decision this lane did not take.** The contract asks that the new names
+"highlight as builtins". This grammar has never painted a prelude function
+as a builtin, so there was no list to extend. Doing it means a new pattern,
+`@function.builtin` on a call whose callee is one of the prelude's 124
+functions: it would repaint every `print(…)` in every wolf file, it needs a
+rule for a program that declares its own `fn` of the same name (W0304 warns,
+it does not refuse), and it needs a gate that holds the list to
+`spec/prelude.json`, as wolf-lsp's `type-names-check` holds the type lists.
+That is a ruling and a lane, not a pin bump.
+
+**Private libdirs, checked** (`g1/libdirs.txt`, `g2/libdirs.txt`): both
+`wolf.so` `f3bc57d8…`, the digest tl18 and tl19 recorded (`src/` has not
+moved since `66a677f0`). The shared `~/.cache/tree-sitter/lib/wolf.so` still
+carries its 2026-09-26 18:19 mtime.
+
+### §2 corrected after the commit
+
+- None of §2's numbers moved. The two drifts §2 names stand: no rule is
+  owed, and no name is owed to the queries.
+- The tree-sitter CLI was copied from `~/lanes/tl11/ts/node_modules/` on
+  kasumi (`setup.log`: sha256 `ad369a4d…`, `tree-sitter 0.26.13`), not
+  downloaded; the brief says a lane stops rather than install a missing host
+  tool, and this one was present.
+
 ## 4. Evidence index
 
-Written with the scoring, after the measurement.
+All logs are on kasumi under `~/lanes/tl20/`. The clone the runs use is
+`~/lanes/tl20/ts`; the corpus is `~/lanes/tl20/wolf-lang`, a depth-1 clone at
+`v0.2.29` = `6ffe7c60` (1130 `.lu`); the tree-sitter binary is
+`~/lanes/tl20/tsbin/tree-sitter`.
+
+| claim | artifact |
+|---|---|
+| the acquisition: tags by `ls-remote`, archive digests = the API's, `wolf --version`, `wolf prelude --json` = the tag's blob, the CLI's digest | `setup.log`, `acquire/members.txt` |
+| nothing grammatical moved | wolf-lang blobs and trees at the four tags (§2); `g1/verdicts-compare.txt`; receiver run 38315479145 |
+| trunk's grammar over 0.2.29: 1092 gated, PASS; verdicts against tl19's | `g1/gate-trunk.log`, `g1/verdicts.txt`, `g1/verdicts-compare.txt`, `tl19-verdicts-head.txt` |
+| the 30 names, their kind, their trees and captures | `g1/new-names.txt`, `g1/new-names-head.txt`, `g1/calls.lu`, `g1/calls-tree.txt`, `g1/calls-captures.txt`, `g1/calls-summary.txt` |
+| `generate` inert, 150/150, queries load, nothing but the script and this file differs from trunk | `g1/ts-generate.log`, `g1/ts-test.log`, `g2/ts-generate.log`, `g2/ts-test.log`, `g2/queries.log`, `g2/head.txt`, `g2/diff-vs-trunk.stat` |
+| the gate's branches at the ratchet | `g2/gate-committed-default.log`, `g2/gate-floor-1093.log`, `g2/gate-committed-shrunk.log`, `g2/gate-planted.log`, `g2/verdicts-diff.txt` |
+| commits | `3b95c0b` (this contract), `83cf07d` (the ratchet) |
+| CI at the head; the planted red | run ids in the PR body |
 
 ## 5. Done-when
 
