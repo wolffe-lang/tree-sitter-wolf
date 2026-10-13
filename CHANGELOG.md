@@ -1,5 +1,23 @@
 # Changelog
 
+## tl20 — 2026-10-13 — the floor at v0.2.29; three releases, no rule
+
+**Nothing grammatical moved in wolf 0.2.27, 0.2.28 or 0.2.29**:
+`spec/grammar.ebnf` is the same blob (`29d5de10`) and the compiler's parser
+and lexer the same trees at v0.2.26 and all three tags, and the receiver at
+the 0.2.29 tag was green on trunk's grammar (run 38315479145). `grammar.js`,
+`src/`, `queries/` and `test/` are unchanged. **The thirty new prelude names
+are all functions** (17 at 0.2.27, 8 at 0.2.28, 5 at 0.2.29; no new type
+name): each parses as a plain call and paints `@function`, as `print` does,
+because no pattern here paints a prelude function as a builtin — so no query
+changed. **The floor ratchets 1019 → 1092** at `6ffe7c60` = `v0.2.29`: 1130
+`.lu`, the same 38 excluded, zero ERROR nodes; per-file verdicts against
+tl19's: 0 removed, 0 changed, 73 added, all clean; both failure branches
+seen red. The floor is the release's count; CI reads wolf-lang's trunk,
+which was two files ahead. `docs/spec-findings-tl20.md` has the contract,
+the prediction (four of four scored before CI held) and the evidence; the
+wolf-lsp half is wolf-lsp `docs/PIN-0229.md`.
+
 ## tl19 — 2026-10-09 — the floor at v0.2.26, and `never` painted
 
 **`never` paints `@type.builtin` in type position** (`-> never`, s213,
