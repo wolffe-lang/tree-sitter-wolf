@@ -235,12 +235,30 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # `fn main() -> !int { let ( = }` planted: 1020 gated, `FAIL: 1 file(s)`,
 # the file named.
 #
+# Re-measured 1092 at v0.2.29 = `6ffe7c60` (2026-10-13, tl20) — 1130 `.lu`
+# files, the same 38 parse-tier counter-examples excluded, zero ERROR nodes,
+# with a private TREE_SITTER_LIBDIR. Three releases since tl19 (v0.2.27,
+# v0.2.28, v0.2.29): 73 files added (18 memory, 13 conc, 12 typecheck,
+# 7 faults, 7 json, 5 fs, 5 os, 4 comptime, 2 link), 5 modified, 0 removed,
+# none of the 73 excluded. The grammar did not move and nothing asked it to:
+# `spec/grammar.ebnf` is blob `29d5de10` and the compiler's parser tree
+# `03b61b38` at all four tags; the three cuts add builtins, which are calls.
+# The receiver at the tag (run 38315479145) gated all 1092 green against the
+# old floor. Per-file verdicts against tl19's: 0 removed, 0 changed, exactly
+# the 73 added, all clean. Witnessed at the boundary: FLOOR=1092 passes,
+# FLOOR=1093 fails "checkout suspect" on the same 1092 files; a shrunk copy
+# fails the committed default; and the ERROR branch on a scratch copy with
+# `fn main() -> !int { let ( = }` planted: 1093 gated, `FAIL: 1 file(s)`,
+# the file named. The floor is the RELEASE's count: wolf-lang's trunk was
+# two files ahead of the tag that day (1094 gated), and CI, which reads
+# trunk, passes above the floor.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1019}"
+FLOOR="${FLOOR:-1092}"
 
 total=0
 skipped=0
