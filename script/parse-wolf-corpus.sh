@@ -253,12 +253,24 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # two files ahead of the tag that day (1094 gated), and CI, which reads
 # trunk, passes above the floor.
 #
+# Re-measured 1103 at v0.2.30 = `1b37f368` (2026-10-16, tl24) — 1141 `.lu`
+# files, the same 38 parse-tier counter-examples excluded, zero ERROR nodes,
+# with a private TREE_SITTER_LIBDIR. One release since tl20: 11 files added
+# (7 typecheck `straight_line_*`, 3 os, 1 conc), 0 modified, 0 removed, none
+# of the 11 excluded. The grammar did not move and nothing asked it to:
+# `spec/grammar.ebnf` blob `29d5de10`, the parser tree `03b61b38` and the
+# lexer tree `9166b9fd` at both tags; the cut adds eleven builtins (calls), a
+# refusal and a crash fix. The receiver at the tag (run 38706859648) gated
+# all 1103 green against the old floor. Per-file verdicts against tl20's:
+# 0 removed, 0 changed, exactly the 11 added, all clean. The boundary and
+# the ERROR branch are witnessed as before (`docs/spec-findings-tl24.md`).
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1092}"
+FLOOR="${FLOOR:-1103}"
 
 total=0
 skipped=0
