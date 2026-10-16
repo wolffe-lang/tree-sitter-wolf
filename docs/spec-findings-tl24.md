@@ -78,3 +78,25 @@ at trunk's grammar are §2 inputs (the receiver printed them).
    trunk has moved since the tag), floor 1103; **a planted break goes red**:
    the default floor moved to 2000 reds the corpus step with `the floor is
    2000`; its revert is green.
+
+## 3, scored (written after the measurement; §1–§3 above are unedited since `a2bc914`)
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | path sets against tl20's: 0 removed, 0 changed, 11 added, all `ok`; `ERR` 22; 1141 paths | `g1/verdicts-compare.txt` (head `a2bc914`, corpus `1b37f368`): `tl20 paths 1130; now 1141; ERR now 22`, `only tl20 (removed)` empty, `same path, different verdict` empty, `added 11; added-ok 11; added-ERR:` empty. Trunk's grammar under the gate, `g1/gate-trunk.log`: `1103 files gated, 38 … excluded` / `PASS … (1103 files, floor 1092)`, rc 0 — the receiver's 38706859648 reproduced | **yes** |
+| 2 | `generate` inert; 150 of 150; the three queries load; nothing under `grammar.js`, `src/`, `queries/`, `test/` changes | `g1/ts-generate.log`, `g2/ts-generate.log`: `generate rc 0`, `src diff rc 0`; `g1/ts-test.log`, `g2/ts-test.log`: `Total parses: 150; successful parses: 150`; `g1/queries.log`, `g2/queries.log`: highlights, locals, injections rc 0; `g2/head.txt`: `src` tree `e8d4fd5e`, `queries` tree `cf647eb2`, `test` tree `884d5bfa`, `grammar.js` blob `2cac20e7`, each equal to trunk `4fe68149`'s; `g2/diff-vs-trunk.stat`: this file and `script/parse-wolf-corpus.sh` only | **yes** |
+| 3 | the 11 new names parse as calls and capture `function`; no `function.builtin` | `g1/new-names-head.txt`: the tag's list (blob `8816efac`) minus the v0.2.29 list (blob `f0fd9c54`): `new names 11 kinds: 11 function`; `g1/calls-tree.txt`: 0 `ERROR`/`MISSING`; `g1/calls-summary.txt`: each of the 11 callees captures `function` once (and the CLI's fallback `variable` listing, as for `print`, as tl20 recorded), `function.builtin captures anywhere: 0` | **yes** |
+| 4 | default green at 1103; `FLOOR=1104` red; shrunk red; planted red | at `1bf6f6d` (script blob `893486fb`): `g2/gate-committed-default.log` `PASS … (1103 files, floor 1103)`, rc 0; `g2/gate-floor-1104.log` `FAIL: only 1103 file(s) gated — the floor is 1104; checkout suspect`, rc 1; `g2/gate-committed-shrunk.log` (`os/signal_shell_rows.lu` removed from a scratch copy) `1102 files gated` / `FAIL: only 1102 … floor is 1103`, rc 1; `g2/gate-planted.log` `1104 files gated` / `FAIL: 1 file(s) …` / `…/tl24_planted_bad_let.lu`, rc 1; `g2/verdicts-diff.txt` `head ERR 22 g1 ERR 22`, diff rc 0 | **yes** |
+| 5 | CI green at the head gating wolf-lang's trunk, floor 1103; the floor-2000 plant red | run ids in the PR body | — (see the PR) |
+
+Four of four scored before CI held. **What a reader in helix or zed sees
+change: nothing.** 0.2.30 added no syntax; its eleven builtins are calls and
+paint as calls, as `print` does, and ruling #77 (4) keeps it that way. What
+changed here is the floor, 1092 → 1103.
+
+## 4. Evidence index
+
+Logs on kasumi under `~/lanes/tl24/` (`setup.log`, `acquire/members.txt`,
+`g1/*`, `g2/*`; the wolf-lang tree is the depth-1 clone at `1b37f368`; the
+CLI is `tsbin/tree-sitter`, sha256 `ad369a4d…`). Private libdirs:
+`lib-g1`, `lib-g2` (`g1/libdirs.txt`, `g2/libdirs.txt`).
