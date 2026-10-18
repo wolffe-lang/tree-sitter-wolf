@@ -1,5 +1,23 @@
 # Changelog
 
+## tl25 — 2026-10-18 — the floor at v0.2.32; nothing grammatical moved
+
+**Nothing grammatical moved in wolf 0.2.31 or 0.2.32**: `spec/grammar.ebnf`
+is the same blob (`29d5de10`) and the compiler's parser and lexer the same
+trees at v0.2.30, v0.2.31 and v0.2.32, and the receiver at the 0.2.31 tag
+was green on trunk's grammar (run 39070721959). `grammar.js`, `src/`,
+`queries/` and `test/` are unchanged. The shift rule (ruling #77 A) changes
+what `<<` and `>>` compute, not how they parse. **The seven new prelude
+names are all functions** (s241's six group and signal calls, s242's
+`os_wait_poll`; none new at 0.2.32): each parses as a plain call and paints
+`@function`, as `print` does; prelude functions do not highlight as
+builtins (ruling #77). **The floor ratchets 1103 → 1116** at `72de141f` =
+`v0.2.32`: 1154 `.lu`, the same 38 excluded, zero ERROR nodes; per-file
+verdicts against tl24's: 0 removed, 0 changed, 13 added, all clean; both
+failure branches seen red. `docs/spec-findings-tl25.md` has the contract,
+the prediction (four of four scored before CI held) and the evidence; the
+wolf-lsp half is wolf-lsp `docs/PIN-0232.md`.
+
 ## tl24 — 2026-10-16 — the floor at v0.2.30; nothing grammatical moved
 
 **Nothing grammatical moved in wolf 0.2.30**: `spec/grammar.ebnf` is the same
