@@ -265,12 +265,28 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # 0 removed, 0 changed, exactly the 11 added, all clean. The boundary and
 # the ERROR branch are witnessed as before (`docs/spec-findings-tl24.md`).
 #
+# Re-measured 1116 at v0.2.32 = `72de141f` (2026-10-18, tl25) — 1154 `.lu`
+# files, the same 38 parse-tier counter-examples excluded, zero ERROR nodes,
+# with a private TREE_SITTER_LIBDIR. Two releases since tl24 (v0.2.31 and
+# v0.2.32; the corpus moved only at v0.2.31): 13 files added (4 faults,
+# 4 typecheck, 2 comptime, 2 os, 1 kernels; eleven of them shifts, two the group and poll rows),
+# 1 modified (`memory/raw_lshr_top_bits`, a comment and its stdout), 0
+# removed, none of the 13 excluded. The grammar did not move and nothing
+# asked it to: `spec/grammar.ebnf` blob `29d5de10`, the parser tree
+# `03b61b38` and the lexer tree `9166b9fd` at all three tags; the shift rule
+# changes what `<<` and `>>` compute, not how they parse, and the seven new
+# builtins are calls. The receiver at the 0.2.31 tag (run 39070721959)
+# gated all 1116 green against the old floor. Per-file verdicts against
+# tl24's: 0 removed, 0 changed, exactly the 13 added, all clean. The
+# boundary and the ERROR branch are witnessed as before
+# (`docs/spec-findings-tl25.md`).
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1103}"
+FLOOR="${FLOOR:-1116}"
 
 total=0
 skipped=0
