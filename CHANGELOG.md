@@ -1,5 +1,26 @@
 # Changelog
 
+## tl27 — 2026-10-19 — the floor at v0.2.33; nothing grammatical moved
+
+**Nothing grammatical moved in wolf 0.2.33**: `spec/grammar.ebnf` is the same
+blob (`29d5de10`) and the compiler's parser, lexer and formatter the same
+trees at v0.2.32 and v0.2.33, and the receiver at the 0.2.33 tag was green on
+trunk's grammar (run 39302827720). `grammar.js`, `src/`, `queries/` and
+`test/` are unchanged. **The five new prelude names are all functions**
+(s246's `os_signal_ignore_one`, `os_signal_default_one`, `os_exit_signal`,
+`os_wait_status_core`, `os_wait_poll_core`): each parses as a plain call and
+paints `@function`, as `print` does; prelude functions do not highlight as
+builtins (ruling #77). **The floor ratchets 1116 → 1117** at `85dab5d7` =
+`v0.2.33`: 1155 `.lu`, the same 38 excluded, zero ERROR nodes; per-file
+verdicts against tl25's: 0 removed, 0 changed, 1 added (`os/signal_one_rows`),
+clean; both failure branches seen red. **#32 answered**: wolf-lang's sender
+dispatches only when a tag moves `spec/grammar.ebnf`, `spec/01-grammar.md` or
+`corpus/`; v0.2.32 moved none of them and its log says `no dispatch` (release
+run 39111522633), and v0.2.33 moved two and dispatched (39302827720); the
+receiver comment in `ci.yml` now says so. `docs/spec-findings-tl27.md` has
+the contract, the prediction (four of four scored before CI held) and the
+evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0233.md`.
+
 ## tl25 — 2026-10-18 — the floor at v0.2.32; nothing grammatical moved
 
 **Nothing grammatical moved in wolf 0.2.31 or 0.2.32**: `spec/grammar.ebnf`
