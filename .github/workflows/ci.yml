@@ -1,3 +1,15 @@
+# ONE TIER (tl28, ruling #92). The org is on GitHub's free plan: 20
+# concurrent jobs shared by every repository. This repository's suite is one
+# job, `gate`, about five minutes on ubuntu (4.8 job-minutes a run, the ten
+# pull-request and push runs before tl28), and every one of its four gates
+# reads the grammar, so no path could leave anything out: there is no plan
+# and no pr tier. Every run runs it all, and its verdict job, `tier full`,
+# fails unless every job it needs succeeded (`ci/tiers.py verdict`; the
+# wiring itself is proven by `ci/tiers-test.py` first). What tl28 adds is
+# the rest of ruling #92's shape: cancel-in-progress for a pull request's
+# superseded runs, and the `nightly-red` label on the issue `notify` opens
+# when an unattended run is red. The daily schedule below was already the
+# nightly.
 name: CI
 on:
   push: {branches: [trunk]}
@@ -28,6 +40,11 @@ on:
   # Manual fire, so the mechanism can be tested without waiting a day.
   workflow_dispatch:
     inputs:
+      tier:
+        description: "tree-sitter-wolf has one tier, full: its one suite cannot be split by path"
+        type: choice
+        options: [full]
+        default: full
       sleep_warn_days:
         description: >-
           Days of trunk inactivity at which `sleep-alarm` goes red. Leave
@@ -80,6 +97,15 @@ on:
   # 170s, and both dispatch-triggered runs sit inside that band.
   repository_dispatch:
     types: [wolf-lang-corpus]
+
+# A pull request's runs: one group per branch, cancel-in-progress, so a new
+# push frees the slot of the run it supersedes. Every other run (a trunk
+# push, the schedule, a dispatch) gets a group of its OWN run id: never
+# cancelled, and never replaced while it waits.
+concurrency:
+  group: ${{ github.event_name == 'pull_request' && format('ci-pr-{0}', github.head_ref) || format('ci-{0}-{1}', github.event_name, github.run_id) }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
 jobs:
   gate:
     runs-on: ubuntu-latest
@@ -244,7 +270,34 @@ jobs:
             gh issue comment "$existing" --repo "$REPO" --body "$BODY"
           else
             echo "opening a new issue"
+            # tl28 (ruling #92): every repository's unattended red carries
+            # one label, so the next lane on it can find what it owes. The
+            # label may exist already; that is not a failure.
+            gh label create nightly-red --repo "$REPO" --color B60205 \
+              --description "a scheduled run on trunk is red; the next lane on the repo owes it" >/dev/null 2>&1 || true
             gh issue create --repo "$REPO" \
               --title "CI: $MARKER ($(date -u +%Y-%m-%d))" \
+              --label nightly-red \
               --body "$BODY"
           fi
+
+  # The run's verdict, and its name: `tier full`, this repository's one
+  # tier. It needs the gate, runs unless the run was cancelled, proves the
+  # wiring first (ci/tiers-test.py) and fails unless every job it needs
+  # succeeded (ci/tiers.py verdict). lane-audit.sh reads its name and
+  # conclusion. (`sleep-alarm` and `notify` are the schedule's, not the
+  # tier's: they run on their own conditions, as before.)
+  tier:
+    name: tier full
+    if: ${{ !cancelled() }}
+    needs: [gate]
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v5
+      - name: the wiring can say no (ci/tiers-test.py)
+        run: python3 ci/tiers-test.py
+      - name: every job succeeded
+        env:
+          NEEDS: ${{ toJSON(needs) }}
+        run: python3 ci/tiers.py verdict
