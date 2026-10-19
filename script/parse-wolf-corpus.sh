@@ -299,7 +299,7 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1117}"
+FLOOR="${FLOOR:-2000}"
 
 total=0
 skipped=0
