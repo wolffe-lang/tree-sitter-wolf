@@ -281,12 +281,25 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # boundary and the ERROR branch are witnessed as before
 # (`docs/spec-findings-tl25.md`).
 #
+# Re-measured 1117 at v0.2.33 = `85dab5d7` (2026-10-19, tl27) — 1155 `.lu`
+# files, the same 38 parse-tier counter-examples excluded, zero ERROR nodes,
+# with a private TREE_SITTER_LIBDIR. One file added (`os/signal_one_rows`,
+# s246's one-meaning and exit-by-signal shape rows), 1 modified
+# (`os/group_rows`, its `text_zero` row out, wolf-lang#787), 0 removed,
+# neither excluded. The grammar did not move and nothing asked it to:
+# `spec/grammar.ebnf` blob `29d5de10`, the parser tree `03b61b38` and the
+# lexer tree `9166b9fd` at both tags; the five new builtins are calls. The
+# receiver at the 0.2.33 tag (run 39302827720) gated all 1117 green against
+# the old floor. Per-file verdicts against tl25's: 0 removed, 0 changed,
+# exactly the 1 added, clean. The boundary and the ERROR branch are
+# witnessed as before (`docs/spec-findings-tl27.md`).
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1116}"
+FLOOR="${FLOOR:-1117}"
 
 total=0
 skipped=0
