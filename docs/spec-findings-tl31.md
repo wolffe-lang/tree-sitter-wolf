@@ -1,0 +1,97 @@
+# tl31 — the grammar at 0.2.34
+
+wolf-lang cut **0.2.34** (its CHANGELOG dated 2026-10-20; `v0.2.34` =
+`9da7bdcf`, release 419552903, published 2026-10-21). This repository last
+moved at 0.2.33 (tl27, floor 1117) and was tiered by tl28 (`79b6e92`,
+verdict-only: every run is `tier full`). This file is lane tl31's contract
+and record for tree-sitter-wolf: whether anything 0.2.34 added to the
+surface needs a grammar rule or a highlight pattern, the corpus floor at
+0.2.34 (the receiver's count at the tag), and tree-sitter-wolf#27 if in
+reach. The wolf-lsp half (the pin, the vendored spec with 0.2.34's seven
+prelude names and the mark `busy`, the transcripts and the six smokes) is
+wolf-lsp `docs/PIN-0234.md` on its branch `tl31`. Contract: planning
+`sprints/lsp/tl31-the-editors-at-0234.md` (`e26ec74`); rules
+`sprints/RULES.md` with 0.2.34's toolchains; template tl27
+(`docs/spec-findings-tl27.md`).
+
+§1–§3 are committed before any `tree-sitter generate`, `test`, `parse`,
+`query` or corpus-gate run in this lane; §3 is not edited after this
+commit. Everything in §2 was read from git objects (wolf-lang's tags), the
+GitHub API, the downloaded archives and CI logs. tree-sitter-wolf#27 gets a
+prediction of its own (§3b), committed before its first run.
+
+## 1. Forbidden, absolutely
+
+- No grammar rule, scanner change and no highlight query changed without a
+  corpus or highlight case that shows it. **Prelude functions do not
+  highlight as builtins** (ruling #77, item 4): no `@function.builtin`
+  pattern over prelude names, the seven new ones included, and no pattern
+  over marks.
+- No `rm` outside `~/lanes/tl31/`; no `git add -A`; nothing under
+  `~/.claude`; nothing in another org's repository; no library source that
+  is not the maintainer's is read (RULES §1): tree-sitter's behaviour is
+  measured black-box (the CLI's `parse`, `test`, `query`) and from its
+  published documentation only.
+- No build on nomad-1: `tree-sitter generate/test/parse/query` and the gate
+  run on kasumi under `~/lanes/tl31/`, each with a private
+  `TREE_SITTER_LIBDIR` (tl13). Lanes install no host tool: the CLI is the
+  0.26.13 binary tl27 used, accepted only if its sha256 is the one tl14–tl27
+  recorded (`ad369a4d…`).
+- No merge, no tag, no issue filed or closed; the branch asserted before
+  every commit; no attribution trailers.
+- The toolchain is the release by digest, each digest read twice, never
+  wolf-lang's trunk. The floor ratchets to the measured count at the
+  release, never down, never above it; a count of files is compared as a
+  set of paths both ways (wolf-lang#177). No "seen red" without a run id,
+  sha or captured log in the same paragraph.
+
+## 2. Inputs, re-derived 2026-10-21 against origin
+
+| input | contract said | measured | drift |
+|---|---|---|---|
+| tree-sitter-wolf trunk | `79b6e92` (tl27, tl28) | `79b6e927` (tl28's plant revert), by `git fetch` on nomad-1 and the clone on kasumi; open issues: #27 | none |
+| wolf 0.2.34 | `v0.2.34` at `9da7bdcf` (release 419552903) | `v0.2.34^{commit}` = `9da7bdcf2aea9adf48df6570bedc58e16e9ef853` (annotated tag object `38ab81cb…`), by `git rev-parse` on nomad-1 and `git ls-remote` on kasumi; release **419552903**, `draft=false`, published 2026-10-21T12:58:10Z, the only release carrying the tag, four assets (API digests): linux x86-64 `88a9dd3d…`, linux aarch64 `ca5cadf9…`, macOS arm64 `29c8331f…`, windows `77bb8403…`. The linux x86-64 and macOS archives downloaded on kasumi and hashed twice (`sha256sum`, `openssl dgst`), both equal to the API's; `wolf 0.2.34 (wolfgang, pin 9da7bdc)` | none |
+| lupin 0.1.55 | `v0.1.55` at `e642f26` | `v0.1.55^{commit}` = `e642f2630ad4c7f53740428d5cca705f2e0d295b` (tag object `047184fb…`); release 418932753 (linux x86-64 `1152abc0…`, macOS `2eac1ccc…`, matched twice). This repository never runs lupin | none |
+| **"the grammar re-checked against 0.2.34"** | expect nothing: s247 and s248 added calls, not syntax | **Nothing grammatical changed in 0.2.34.** At `v0.2.33` and `v0.2.34`: `spec/grammar.ebnf` blob `29d5de10`, `spec/01-grammar.md` blob `d1bd4ff9`, the compiler's parser `crates/wolf_parse/src` tree `03b61b38`, its lexer `crates/wolf_lex/src` tree `9166b9fd`, the formatter `crates/wolf_fmt/src` tree `c29a0c87`, all identical (and identical at v0.2.30–v0.2.33, tl27). Under `crates/wolf_parse` and `crates/wolf_lex` (v0.2.33..v0.2.34, 112 commits) the only change is two snapshot files under `tests/snapshots/`, `os__term_editor_rows`, one per crate, the snapshots of the one corpus file below. The CHANGELOG names no token, keyword, operator or production: seven builtins (calls: `os_fork`, `os_term_restore_at_exit`, `os_signal_wait_fds`, `fs_sync`, `fs_sync_dir`, `fs_realpath`, `os_clock_ns`), one mark (`busy`), the mode int's bits 5–7, `wolf test`'s discovery, the hub at start, the std pin | no rule is owed |
+| prelude names | 0.2.34's seven | `spec/prelude.json` blob `41ac122f` (v0.2.33) → `b71ca9cd` (v0.2.34), `.names` as `(name, kind)` sets both ways: 187 → 194, **7 added, 0 removed, 0 entries changed**, all `function`, all `[os.host.sigs]`, all `w0304`: the seven above. Kinds at v0.2.34: `function` 154, `builtin_type` 18, `type` 8, `intrinsic` 8, `provisional` 6, so the type names (`builtin_type` + `type`) stay **26**. Marks 18 → 19 (`busy`, by `os_fork`). `queries/highlights.scm` paints prelude names only as `@type.builtin`; a call paints `@function`; nothing paints a mark (marks are identifiers in an error set). Ruling #77 (4) keeps it so | nothing owed to the queries |
+| **the receiver at v0.2.34** | its count | **It fired.** wolf-lang's release run 39602781235 (`push` of `v0.2.34`, 2026-10-21T12:50:00Z), job "dispatch tree-sitter-wolf's corpus gate" (119231236167), log: `since v0.2.33: 1 file(s) moved under spec/grammar.ebnf, spec/01-grammar.md, corpus/` / `dispatched wolf-lang-corpus to wolffe-lang/tree-sitter-wolf for v0.2.34 (9da7bdcf…)` / `receiver run: …/runs/39602808647`. Here run **39602808647** (`repository_dispatch` `wolf-lang-corpus`, 2026-10-21T12:50:12Z, trunk `79b6e927`, job `gate` 119231325842, wolf-lang checked out at `9da7bdcf`): `wolf-lang corpus: 1117 files gated, 38 parse-tier counter-examples excluded` / `PASS: zero ERROR nodes across the corpus (1117 files, floor 1117)`; `tier full` 119234064015 `success` | **the floor equals the release count: no ratchet** |
+| corpus size | — | `corpus/**/*.lu` by `git ls-tree`: 1155 at `v0.2.33`, **1155** at `v0.2.34`; as path sets v0.2.33 → v0.2.34: **0 added, 1 modified, 0 removed**: modified `os/term_editor_rows` (its `mode_bit5` row and print line removed and its header comment rewritten: s248 made bits 5–7 fields, wolf-lang#802). Not parse-tier, so 38 excluded and 1117 gated, as the receiver printed | — |
+| wolf-lang trunk | — | `0cb954a8` (2026-10-21), past the tag: 1172 `.lu` files (17 added, 3 modified since `v0.2.34`), and `spec/01-grammar.md` moved (s252: a `{` on its own line after an `if`/`while`/`for`/`loop` header is E0201 by design, wolf-lang#822; prefix `~` is retired, E0107, wolf-lang#800); `spec/grammar.ebnf` did not. Both witnesses (`grammar/if_brace_next_line.lu` `fail(E0201)`, `typecheck/int_not_tilde.lu` `fail(E0107)`) are parse-tier counter-examples, excluded by directive; `grammar.js` has no `~`. That is 0.2.35's grammar, not this lane's; the CI gate reads wolf-lang's default branch, so it meets those files | — |
+| tests | — | `test/corpus`: 150 cases; no `test/highlight/` (#27 open: tl19's `never.lu` retired at `bedb686`) | — |
+| tree-sitter-cli | — | 0.26.13 by `package-lock.json`; kasumi has no `tree-sitter` on `PATH`; tl27's `~/lanes/tl27/tsbin/tree-sitter` copied into `~/lanes/tl31/tsbin/`, sha256 `ad369a4d…` (`setup.log`), tl14–tl27's digest | — |
+| tl27's verdicts | — | kasumi `~/lanes/tl27/g1/verdicts.txt` (1155 lines, ERR 22; identical to its `g2/verdicts-head.txt` by `cmp`), over the 0.2.33 corpus at the grammar trunk still carries (`src` tree `e8d4fd5e`, `queries` `cf647eb2`, `test` `884d5bfa`, `grammar.js` `2cac20e7`, as at tl27); copied to `~/lanes/tl31/tl27-verdicts.txt` | — |
+| **tree-sitter-wolf#27** | in reach | a `line_comment` (and a `doc_comment`) that follows a newline starts at the END of the previous line (tl19: `(line_comment [0, 15] - [1, 4])` for a `// a` at row 1, column 0), so a highlight assertion lands a row up and `test/highlight/` cannot be used; the issue names a likely cause in `src/scanner.c`, unverified | §3b |
+
+## 3. Prediction, committed before any run
+
+**Not a prediction:** 1155 files, 38 excluded, 1117 gated and a green gate
+at trunk's grammar over the tag's corpus are §2 inputs (the receiver
+printed them).
+
+1. **Per-file verdicts at trunk's grammar over the v0.2.34 corpus, as path
+   sets against tl27's**: 0 paths only in tl27's, 0 only in tl31's; the 1155
+   shared paths keep their verdict (`os/term_editor_rows` stays `ok`);
+   `ERR` stays 22 (tl27's 22 paths). *Falsifier:* a shared path changing
+   verdict.
+2. **`generate` is inert and the tests hold**: `src/` byte-identical after
+   `tree-sitter generate`; `tree-sitter test` 150 of 150; the three query
+   files load. No file under `grammar.js`, `src/`, `queries/` or `test/`
+   changes for 0.2.34 itself.
+3. **The seven new names parse as plain calls and paint as `print` does**:
+   a scratch file calling each name read from `spec/prelude.json` at the
+   tag (the tag's list minus the v0.2.33 list wolf-lsp trunk vendors, never
+   typed by hand) parses with no `ERROR`/`MISSING`; each callee captures
+   `function` exactly once; no `function.builtin` capture anywhere.
+4. **The gate's branches at the unchanged floor** (`FLOOR="${FLOOR:-1117}"`),
+   over the v0.2.34 corpus: default passes `1117 files gated`, `floor
+   1117`; `FLOOR=1118` fails `checkout suspect`, rc 1; a copy with one
+   gated file removed fails `only 1116 … floor is 1117`, rc 1; a copy with
+   `fn main() -> !int { let ( = }` planted gates 1118 and fails `FAIL: 1
+   file(s)` naming it, rc 1.
+5. **The floor does not move** (1117 is the release count and already the
+   floor); its record in `script/parse-wolf-corpus.sh` and the receiver's
+   comment in `ci.yml` gain the v0.2.34 measurement with no number changed.
+   **CI at the head** is green gating wolf-lang's trunk (1117 files or
+   more), floor 1117; **a planted break goes red**: the default floor moved
+   to 2000 reds the corpus step with `the floor is 2000`; its revert is
+   green.
