@@ -18,7 +18,10 @@
 //   terminator is inserted when the next token is `else`, past any
 //   trivia. That lookahead is the external scanner's
 //   (`_newline_before_else`); `newlineThenElse()` below is where the
-//   grammar spends it.
+//   grammar spends it. The terminator newline itself is external too
+//   (`_newline`, tree-sitter-wolf#27): as an internal token beside `/\s/`
+//   it made a comment right after a newline start at the previous line's
+//   end (src/scanner.c, the newlines section).
 //
 // [gram.lex.str] — every plain string literal is an f-string. The string
 //   rules re-enter full expression mode inside `{…}` (the lexer mode
@@ -85,10 +88,10 @@ function commaSep(rule) {
 //
 // The lookahead is one token but reaches past trivia (blank lines,
 // comments), which no regex token can do, so the newline in this
-// position is the external scanner's `_newline_before_else`. External
-// tokens are tried first, so it takes the newline exactly when `else`
-// follows and leaves `_newline` to terminate the statement otherwise —
-// one reading, no GLR fork on every line in the file.
+// position is the external scanner's `_newline_before_else`. The scanner
+// lexes the terminator `_newline` too, and decides between the two at the
+// newline: `_newline_before_else` exactly when `else` follows, `_newline`
+// otherwise — one reading, no GLR fork on every line in the file.
 function newlineThenElse($) {
   return seq(optional($._newline_before_else), 'else');
 }
@@ -131,6 +134,9 @@ module.exports = grammar({
     $._raw_string_end,
     $._newline_before_else,
     $._error_item_keyword,
+    // [gram.lex.newline]'s terminator (tree-sitter-wolf#27): lexed by the
+    // scanner, so where no terminator is valid a newline is plain trivia.
+    $._newline,
     $._error_sentinel,
   ],
 
@@ -175,8 +181,10 @@ module.exports = grammar({
 
     // ======================================= terminators [gram.lex.newline]
 
+    // `_newline` is external (the `externals` list; src/scanner.c's
+    // newlines section): until tree-sitter-wolf#27 it was
+    // `token(prec(1, /\r?\n/))` here.
     _terminator: $ => choice(';', $._newline),
-    _newline: _ => token(prec(1, /\r?\n/)),
 
     // ============================================ statements [gram.expr.block]
 
