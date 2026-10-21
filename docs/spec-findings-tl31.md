@@ -95,3 +95,40 @@ printed them).
    more), floor 1117; **a planted break goes red**: the default floor moved
    to 2000 reds the corpus step with `the floor is 2000`; its revert is
    green.
+
+## 3b. tree-sitter-wolf#27, predicted before its first run
+
+Committed after §3's runs (`g1`, `g2`) and before any run on #27's witness.
+Every measurement on kasumi with a private `TREE_SITTER_LIBDIR`; the cause
+is found black-box (the CLI's `parse` and `query` on variants, and scratch
+copies of `src/scanner.c` with one branch disabled), never from tree-sitter's
+source.
+
+1. **The witness reproduces at trunk's `src/`**: `tree-sitter parse` of
+   tl19's five lines gives `(line_comment [0, 15] - [1, 4])` and
+   `(line_comment [3, 1] - [4, 4])`, each starting at the end of the token
+   before the newline; a comment on its code's own line (`0 // c`) starts at
+   its own `//`; a `//!` doc comment after a newline has the same shape.
+2. **The guess at the cause**: the newline before the comment is a token
+   (`_newline`, a terminator) rather than trivia, and the comment's start is
+   that token's start. So a comment after a newline where no terminator is
+   valid (inside an argument list's parentheses) starts at its own `//`, and
+   the external scanner is not the cause (disabling its `else` lookahead in a
+   scratch copy does not move either range). *Falsifier:* either of those.
+3. **A fix, only with a case that shows it**: a highlight test
+   (`test/highlight/comments.lu`, the repository's first since tl19 retired
+   `never.lu` at `bedb686`) asserting `comment` on comments after a newline
+   at a block's start, between statements, after an item at top level, and
+   a doc comment, with a `type.builtin` caret on the line below one of them:
+   **red at trunk's `src/`** (a caret's position read from the comment
+   node's start lands a row up), **green after**. With it: `tree-sitter
+   test` keeps its 150 corpus cases green; the per-file verdicts over the
+   v0.2.34 corpus are unchanged (1155 paths, ERR 22, the same 22); the gate
+   gates 1117 green; `generate` reproduces the committed `src/`.
+4. **If no change keeps every corpus case and every verdict**, nothing under
+   `grammar.js`, `src/` or `queries/` changes, the measured cause is written
+   here, and #27 stays open with it.
+5. **If `src/` changes**, the editors' grammar pin in wolf-lsp (helix `rev`,
+   zed `commit`, both `e7388233`) does not move in this lane: pinning an
+   unmerged head would make wolf-lsp's merge wait on this repository's. The
+   pin move is an issue to file, with this branch's merged sha.
