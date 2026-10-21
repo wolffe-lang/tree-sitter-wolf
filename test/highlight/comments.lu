@@ -1,0 +1,25 @@
+// tree-sitter-wolf#27: a comment that follows a newline starts at its own
+// two slashes, so every assertion below, itself a comment at column 0
+// after a newline, lands on the row above it and not two rows up.
+
+fn count(n: int) -> int {
+// the first line of a block
+// <- comment.line
+    let m: int = n
+//  ^ keyword.storage.modifier
+//             ^ operator
+
+// after a blank line, between statements
+// <- comment.line
+    m
+}
+// at the top level, after an item
+// <- comment.line
+
+/// a doc comment after a blank line
+// <- comment.block.documentation
+fn main() -> !int {
+    count(1)
+//        ^ constant.numeric.integer
+    0
+}
