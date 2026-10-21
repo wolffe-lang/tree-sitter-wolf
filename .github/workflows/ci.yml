@@ -85,7 +85,8 @@ on:
   # `v0.2.32 moves nothing the grammar mirror parses; no dispatch` (wolf-lang
   # release run 39111522633), so no receiver run here is expected for that
   # tag; the next daily run gates the same files. At v0.2.33 it read 2 files
-  # and dispatched: run 39302827720, 1117 files gated. So a missing receiver
+  # and dispatched: run 39302827720, 1117 files gated; at v0.2.34 it read 1
+  # file and dispatched: run 39602808647, 1117 files gated. So a missing receiver
   # run is a question for the sender's log, which says which case it was.
   #
   # READ THE DURATION, NOT THE COLOUR. The sender SKIPS LOUDLY AND STAYS
