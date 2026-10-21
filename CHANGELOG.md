@@ -1,5 +1,32 @@
 # Changelog
 
+## tl31 — 2026-10-21 — the floor at v0.2.34; comments start at their own `//` (#27)
+
+**Nothing grammatical moved in wolf 0.2.34**: `spec/grammar.ebnf` is the same
+blob (`29d5de10`) and the compiler's parser, lexer and formatter the same
+trees at v0.2.33 and v0.2.34, and the receiver at the 0.2.34 tag was green on
+trunk's grammar (run 39602808647, 1117 files). **The seven new prelude names
+are all functions** (s247's `os_fork`; s248's `os_term_restore_at_exit`,
+`os_signal_wait_fds`, `fs_sync`, `fs_sync_dir`, `fs_realpath`,
+`os_clock_ns`): each parses as a plain call and paints `@function`, as
+`print` does; prelude functions do not highlight as builtins (ruling #77),
+and the new mark `busy` is an identifier in an error set, painted by
+nothing. **The floor stays 1117** at `9da7bdcf` = `v0.2.34`: 1155 `.lu`, the
+same 38 excluded, zero ERROR nodes; per-file verdicts against tl27's: 0
+removed, 0 changed, 0 added; both failure branches seen red.
+**tree-sitter-wolf#27 fixed**: a comment right after one or more newlines,
+where a statement could end, started at the previous line's end, because the
+terminator `_newline` was an internal token beside `/\s/` in `extras` and the
+lexer read the newline into the comment token; it is now an external token,
+lexed by `src/scanner.c` beside `_newline_before_else`, and every comment
+starts at its own `//`. Shown by the repository's first highlight test since
+tl19's retired (`test/highlight/comments.lu`, 7 assertions, red at trunk's
+`src/`); the 150 corpus cases and all 1155 per-file verdicts unchanged.
+Helix and zed (pinned by wolf-lsp at `e7388233`) see it when that pin moves.
+`docs/spec-findings-tl31.md` has the contract, the predictions (§3 four of
+four, §3b four of four scored before CI) and the evidence; the wolf-lsp half
+is wolf-lsp `docs/PIN-0234.md`.
+
 ## tl27 — 2026-10-19 — the floor at v0.2.33; nothing grammatical moved
 
 **Nothing grammatical moved in wolf 0.2.33**: `spec/grammar.ebnf` is the same
