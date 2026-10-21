@@ -69,6 +69,17 @@
         }
       ]
     },
+    "_newline": {
+      "type": "TOKEN",
+      "content": {
+        "type": "PREC",
+        "value": 1,
+        "content": {
+          "type": "PATTERN",
+          "value": "\\r?\\n"
+        }
+      }
+    },
     "_statement": {
       "type": "CHOICE",
       "members": [
@@ -6549,10 +6560,6 @@
     {
       "type": "SYMBOL",
       "name": "_error_item_keyword"
-    },
-    {
-      "type": "SYMBOL",
-      "name": "_newline"
     },
     {
       "type": "SYMBOL",

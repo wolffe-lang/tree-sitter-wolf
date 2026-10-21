@@ -9,18 +9,14 @@
 //                         balance; the opening fence depth is carried in
 //                         serialized scanner state.
 //
-// It also owns the statement-ending newline ([gram.lex.newline]), both
-// the terminator and the one decision the internal lexer cannot make
-// (wolf-lang#276):
+// It also owns the one terminator decision the internal lexer cannot
+// make ([gram.lex.newline], wolf-lang#276):
 //
 //   NEWLINE_BEFORE_ELSE   a newline whose next token is `else` inserts
 //                         no terminator. One token of lookahead, and the
 //                         trivia in between (blank lines, comments) does
 //                         not count — so the decision needs to read past
 //                         trivia, which a regex token cannot do.
-//   NEWLINE               the terminator otherwise. External so that a
-//                         comment after a newline starts at its own `//`
-//                         (tree-sitter-wolf#27; the newlines section).
 //
 // Multiline content also stops at `\` (escape) and `{` (interpolation —
 // f-string mode works inside `"""`), handing those back to the grammar.
@@ -36,7 +32,6 @@ enum TokenType {
   RAW_STRING_END,
   NEWLINE_BEFORE_ELSE,
   ERROR_ITEM_KEYWORD,
-  NEWLINE,
   ERROR_SENTINEL,
 };
 
@@ -174,88 +169,60 @@ static bool scan_multiline_content(TSLexer *lexer) {
   return have_content;
 }
 
-// ---------------------------------------------------------------- newlines
+// ------------------------------------------------ newline before `else`
 
-// [gram.lex.newline]. The newline that ends a statement is a token, and
-// this scanner lexes it, both of its kinds:
+// [gram.lex.newline], wolf-lang#276 (2026-09-09, retiring E0005): no
+// terminator is inserted at a newline when the next token is `else`. A
+// line whose first token is `else` continues the previous statement, so
+// `}` newline `else {` is `} else {` and `f()` newline `else 0` is
+// `f() else 0`. Which `else` it is, the binding decides
+// ([gram.amb.else]); the line never does.
 //
-//   `_newline_before_else`  wolf-lang#276 (2026-09-09, retiring E0005): no
-//     terminator is inserted at a newline when the next token is `else`. A
-//     line whose first token is `else` continues the previous statement,
-//     so `}` newline `else {` is `} else {` and `f()` newline `else 0` is
-//     `f() else 0`. Which `else` it is, the binding decides
-//     ([gram.amb.else]); the line never does.
-//   `_newline`  the terminator otherwise (`_terminator` is `;` or it).
-//
-// Each token is the newline itself. Everything after it — blank lines,
+// The token is the newline itself. Everything after it — blank lines,
 // line comments, doc comments — stays trivia, and is only read to find
-// out whether `else` is the next token.
-//
-// WHY THE TERMINATOR IS EXTERNAL (tree-sitter-wolf#27). It was an internal
-// token, `token(prec(1, /\r?\n/))`, beside `/\s/` in `extras`, and a `\n`
-// that is both a separator and the start of a valid token is not skipped
-// by the internal lexer: it is read as part of the token being lexed. So
-// where a terminator was valid, a comment right after one or more newlines
-// began at the previous line's end — `(line_comment [0, 15] - [1, 4])` for
-// a `// a` on row 1 — while a comment after indentation, or inside
-// parentheses (no terminator valid), began at its own `//` (measured
-// black-box, `docs/spec-findings-tl31.md` §3b). Lexed here, the newline is
-// either this token or, where neither kind is valid, plain trivia the
-// internal lexer skips; every comment then starts at its own two slashes.
-//
-// Past the newline, without moving the token: is `else` the next token?
-// LOOKAHEAD ONLY, with skip=false: the token already ended at the newline
-// (`mark_end`), and a skip=true advance here would drag its start forward
-// to wherever the lookahead stopped (see `scan_error_item_keyword`).
-static bool next_token_is_else(TSLexer *lexer) {
-  for (;;) {
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-           lexer->lookahead == '\r' || lexer->lookahead == '\n') {
-      lexer->advance(lexer, false);
-    }
-    if (lexer->lookahead != '/') break;
-    lexer->advance(lexer, false);
-    if (lexer->lookahead != '/') return false;
-    while (!lexer->eof(lexer) && lexer->lookahead != '\n') {
-      lexer->advance(lexer, false);
-    }
-    if (lexer->eof(lexer)) return false;
-  }
-  static const char kw[] = "else";
-  for (unsigned i = 0; i < 4; i++) {
-    if (lexer->lookahead != (int32_t)kw[i]) return false;
-    lexer->advance(lexer, false);
-  }
-  // `elsewhere` is an identifier: the keyword ends at a non-word byte.
-  int32_t c = lexer->lookahead;
-  return !(c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
-           (c >= 'A' && c <= 'Z') || c >= 0x80);
-}
-
-typedef enum { NL_NONE, NL_TOKEN, NL_CONSUMED } NewlineScan;
-
-// The newline: `_newline_before_else` when `else` follows, else the
-// terminator `_newline`. NL_NONE when no newline is next (nothing but
-// intra-line whitespace was skipped, so the caller may try other tokens);
-// NL_CONSUMED when a newline was read and neither token is valid here (the
-// caller must give up: the internal lexer then skips it as trivia).
-static NewlineScan scan_newline(TSLexer *lexer, const bool *valid) {
+// out whether `else` is the next token. External tokens are tried
+// before the internal lexer, so this takes the newline exactly when
+// `else` follows and leaves `_newline` to terminate the statement
+// otherwise.
+static bool scan_newline_before_else(TSLexer *lexer) {
   while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
          lexer->lookahead == '\r') {
     lexer->advance(lexer, true);
   }
-  if (lexer->lookahead != '\n') return NL_NONE;
+  if (lexer->lookahead != '\n') return false;
   advance(lexer);
   lexer->mark_end(lexer);
-  if (valid[NEWLINE_BEFORE_ELSE] && next_token_is_else(lexer)) {
-    lexer->result_symbol = NEWLINE_BEFORE_ELSE;
-    return NL_TOKEN;
+
+  // Past the trivia. `//` covers `///` and `//!` too; a lone `/` is the
+  // division operator and cannot begin the next line of a continuation.
+  for (;;) {
+    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
+           lexer->lookahead == '\r' || lexer->lookahead == '\n') {
+      lexer->advance(lexer, true);
+    }
+    if (lexer->lookahead != '/') break;
+    lexer->advance(lexer, true);
+    if (lexer->lookahead != '/') return false;
+    while (!lexer->eof(lexer) && lexer->lookahead != '\n') {
+      lexer->advance(lexer, true);
+    }
+    if (lexer->eof(lexer)) return false;
   }
-  if (valid[NEWLINE]) {
-    lexer->result_symbol = NEWLINE;
-    return NL_TOKEN;
+
+  static const char kw[] = "else";
+  for (unsigned i = 0; i < 4; i++) {
+    if (lexer->lookahead != (int32_t)kw[i]) return false;
+    lexer->advance(lexer, true);
   }
-  return NL_CONSUMED;
+  // `elsewhere` is an identifier: the keyword ends at a non-word byte.
+  int32_t c = lexer->lookahead;
+  if (c == '_' || (c >= '0' && c <= '9') || (c >= 'a' && c <= 'z') ||
+      (c >= 'A' && c <= 'Z') || c >= 0x80) {
+    return false;
+  }
+
+  lexer->result_symbol = NEWLINE_BEFORE_ELSE;
+  return true;
 }
 
 // `error Name = {â¦}` â [gram.item.error] / [gram.inv.ctx], s158
@@ -336,21 +303,8 @@ bool tree_sitter_wolf_external_scanner_scan(void *payload, TSLexer *lexer,
                                             const bool *valid) {
   Scanner *s = (Scanner *)payload;
 
-  // Error recovery: every symbol is marked valid. Do nothing clever, but a
-  // newline is still the terminator token it was when the internal lexer
-  // owned it, so recovery can resynchronise at a line's end.
-  if (valid[ERROR_SENTINEL]) {
-    if (s->in_raw) return false;
-    while (lexer->lookahead == ' ' || lexer->lookahead == '\t' ||
-           lexer->lookahead == '\r') {
-      lexer->advance(lexer, true);
-    }
-    if (lexer->lookahead != '\n') return false;
-    advance(lexer);
-    lexer->mark_end(lexer);
-    lexer->result_symbol = NEWLINE;
-    return true;
-  }
+  // Error recovery: every symbol is marked valid. Do nothing clever.
+  if (valid[ERROR_SENTINEL]) return false;
 
   // Guarded on the first byte so the common case costs one comparison.
   if (valid[ERROR_ITEM_KEYWORD] && !s->in_raw) {
@@ -366,14 +320,10 @@ bool tree_sitter_wolf_external_scanner_scan(void *payload, TSLexer *lexer,
 
   // Checked before the string branches below cannot match it anyway, and
   // guarded on the first byte so the common case costs one comparison.
-  if ((valid[NEWLINE] || valid[NEWLINE_BEFORE_ELSE]) && !s->in_raw) {
+  if (valid[NEWLINE_BEFORE_ELSE] && !s->in_raw) {
     int32_t c = lexer->lookahead;
     if (c == '\n' || c == ' ' || c == '\t' || c == '\r') {
-      switch (scan_newline(lexer, valid)) {
-        case NL_TOKEN: return true;
-        case NL_CONSUMED: return false;
-        case NL_NONE: break;
-      }
+      if (scan_newline_before_else(lexer)) return true;
     }
   }
 
