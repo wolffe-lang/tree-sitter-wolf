@@ -294,6 +294,19 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # exactly the 1 added, clean. The boundary and the ERROR branch are
 # witnessed as before (`docs/spec-findings-tl27.md`).
 #
+# Re-measured 1117 at v0.2.34 = `9da7bdcf` (2026-10-21, tl31) — the floor
+# does not move. 1155 `.lu` files, the same 38 parse-tier counter-examples
+# excluded, zero ERROR nodes, with a private TREE_SITTER_LIBDIR. 0 files
+# added, 1 modified (`os/term_editor_rows`, its `mode_bit5` row out: s248
+# made bits 5-7 of the mode int fields, wolf-lang#802), 0 removed. The
+# grammar did not move and nothing asked it to: `spec/grammar.ebnf` blob
+# `29d5de10`, the parser tree `03b61b38` and the lexer tree `9166b9fd` at
+# both tags; the seven new builtins (`os_fork` and s248's six) are calls.
+# The receiver at the 0.2.34 tag (run 39602808647) gated all 1117 green at
+# this floor. Per-file verdicts against tl27's: 0 removed, 0 changed, 0
+# added. The boundary and the ERROR branch are witnessed as before
+# (`docs/spec-findings-tl31.md`).
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
