@@ -898,7 +898,7 @@ os_name()
 (source_file
   (expression_statement
     (call_expression
-      (missing_identifier)
+      (identifier)
       (arguments
         (argument
           (string_literal))
