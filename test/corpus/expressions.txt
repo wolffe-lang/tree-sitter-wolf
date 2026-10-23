@@ -884,3 +884,27 @@ print("{!x} {!(0 as u32)}")
                     (type_path
                       (path
                         (identifier)))))))))))))
+
+
+==================
+v0.2.35 prelude function calls
+==================
+
+fs_access("ready", 4)
+os_name()
+
+---
+
+(source_file
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments
+        (argument
+          (string_literal))
+        (argument
+          (integer_literal)))))
+  (expression_statement
+    (call_expression
+      (identifier)
+      (arguments))))

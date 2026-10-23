@@ -53,6 +53,16 @@
   function: (identifier) @constructor
   (#match? @constructor "^[A-Z]"))
 
+; wolf-lang v0.2.35 prelude functions. Keep this closed: a builtin capture
+; promises the name is supplied without a declaration. `env_arg0` and
+; `env_args_bytes` remain unreleased (wolf-lang#904).
+(call_expression
+  function: (identifier) @function.builtin
+  (#any-of? @function.builtin
+    "fs_access" "fs_adopt" "fs_fstat_record" "fs_lock" "fs_mkfifo"
+    "fs_set_nonblock" "fs_unlock" "fs_write_some" "os_arch"
+    "os_core_limit" "os_core_off" "os_name" "os_set_core_limit"))
+
 (call_expression
   function: (identifier) @function)
 
