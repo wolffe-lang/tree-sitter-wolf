@@ -302,13 +302,6 @@
 ["(" ")" "[" "]" "{" "}" "#["] @punctuation.bracket
 ["," ";" ":" "."] @punctuation.delimiter
 
-;; s263's C variadic tail, `extern "c" fn printf(fmt: *u8, ...) -> i32`
-;; ([abi.c.variadic.syntax]). "The ellipsis has no name, type or passing
-;; mode": it binds nothing, so it is no @variable.parameter, and it computes
-;; nothing, so it is no @operator (the `..` above is a range, a value). It is
-;; punctuation that means something, as the interpolation braces are.
-(variadic_parameter) @punctuation.special
-
 ; ------------------------------------------------------------ fallback
 
 (identifier) @variable

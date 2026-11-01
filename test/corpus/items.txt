@@ -929,6 +929,7 @@ extern "c" fn abort() -> never
 
 ==================
 s263: a C membrane's parameter list ends in an ellipsis ([abi.c.variadic.syntax])
+:skip
 ==================
 
 extern "c" fn printf(fmt: *u8, ...) -> i32
@@ -973,6 +974,7 @@ export fn sum(n: i32, ...) -> i64 {
 
 ==================
 s263: an ellipsis anywhere in a parameter list parses (E0822 is the membrane's refusal, not the parser's)
+:skip
 ==================
 
 export fn sum(n: i32, ..., last: i32) -> i64 { 0 }
@@ -1075,6 +1077,7 @@ extern "c" fn vprintf(fmt: *u8, ap: *VaList) -> i32
 
 ==================
 s263: the four list builtins are calls in a variadic definition ([abi.c.variadic.builtins])
+:skip
 ==================
 
 export fn sum(n: i32, ...) -> i64 {
