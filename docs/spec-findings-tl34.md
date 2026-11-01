@@ -133,3 +133,45 @@ commit.
    unmerged head would make wolf-lsp's merge wait on this repository's;
    the pin move to this branch's merged sha is an issue to file (tl31's
    §3b.5).
+
+## 3, scored (written after the measurement; §1–§3 above are unedited since `1c753e0`)
+
+Every run is on nomad, from a worktree pinned to the commit named, with a
+private `TREE_SITTER_LIBDIR` per run; logs under `~/lanes/tl34/g<N>/`.
+
+| # | predicted | measured | held? |
+|---|---|---|---|
+| 1 | (a), (b), (d) red at trunk's grammar, (c), (e) green; the highlight file red | `g1/ts-test.log` (head `039ae91`, trunk's `grammar.js` and `src/`): `Total parses: 156; successful parses: 153; failed parses: 3`, the three `✗` being case 78 (a), 79 (b) and 81 (d); 80 (c) and 82 (e) `✓`, rc 1. The highlight tests do not run while a corpus case fails, so `g1/ts-test-e.log` ran them with `-e '^s263'`: `variadic.lu` `Failure - row: 5, column: 37, expected highlight 'type', actual highlights: 'variable'`, rc 1 | **yes** |
+| 2 | `variadic_parameter`, a third alternative of `_parameter`; no conflict; `src/` reproduces; typed and moded ellipses stay ERROR | `8be2f4f`; `tree-sitter generate` printed no conflict and no warning (`fd79c3f`: `src/grammar.json` +8, `src/node-types.json` +8, the node in `parameters`' children and as a named type, `src/parser.c` regenerated); `g2/ts-generate.log` and `g4/ts-generate.log`: `generate rc 0, src diff rc 0`. `g6/typed-moded-tree.txt`: `extern "c" fn typed(n: i32, ...: i32) -> i32` and `extern "c" fn moded(n: i32, mut ...) -> i32` parse rc 1 with 3 `ERROR` nodes | **yes** |
+| 3 | 156 of 156 corpus cases; both highlight files; the queries load | `g4/ts-test.log` (head `2b9ae4f`): `Total parses: 156; successful parses: 156`, `comments.lu (7 assertions)` ✓, `variadic.lu (2 assertions)` ✓, rc 0; `g4/queries.log` highlights, locals, injections rc 0 | **yes** |
+| 4 | the two membrane files ERR → ok over v0.2.36 and trunk, nothing else; v0.2.35 0 changed | `g4/verdicts-*.txt` against `g0/verdicts-*.txt`, as path sets: `v0.2.35` 1217 paths both ways, 0 changed, `ERR` 23; `v0.2.36` 1228 paths both ways, changed exactly `membrane/variadic_declarations.lu` and `membrane/variadic_position.lu` (`ERR` → `ok`), `ERR` 25 → 23; trunk `b16353e8` 1239 paths both ways, the same two and nothing else, `ERR` 25 → 23 | **yes** |
+| 5 | default green at 1188; `FLOOR=1189` red; shrunk red; planted red; trunk 1199 green | at `936913a` (the floor commit): `g5/gate-v0.2.36.log` `1188 files gated` / `PASS … (1188 files, floor 1188)`, rc 0; `g5-floor1189/gate-v0.2.36.log` `FAIL: only 1188 file(s) gated — the floor is 1189; checkout suspect`, rc 1; `g5/gate-v0.2.36-shrunk.log` (`os/arg0.lu` removed from a scratch copy) `1187 files gated` / `FAIL: only 1187 file(s) gated — the floor is 1188`, rc 1; `g5/gate-v0.2.36-planted.log` `1189 files gated` / `FAIL: 1 file(s)` naming `…/tl34_planted_bad_let.lu`, rc 1; `g5/gate-trunk-b16353e.log` `1199 files gated` / `PASS … (1199 files, floor 1188)`, rc 0 | **yes** |
+| 6 | the ellipsis `punctuation.special`; `VaList` `type`; the callees `function`; no `function.builtin` | **The captures, yes; the CLI's resolution, no.** `g6/identifier-captures.txt` (`tree-sitter query queries/highlights.scm` over the first highlight file, at `4d297d4`): `...` captures `punctuation.special` alone; `VaList` captures `type`; `va_start`, `va_end`, `env_arg0`, `env_args_bytes` capture `function`; each identifier also captures the fallback `variable`; 0 `function.builtin`. But the 0.26.13 CLI resolves every identifier to the fallback: measured in a scratch worktree at `fd79c3f` with one-assertion highlight files, `u8` (`type.builtin`), a user type `Point` in three positions (`type`), a parameter name (`variable.parameter`) and a call's callee (`function`) all read `actual highlights: 'variable'`, with `locals.scm` emptied too, and `tree-sitter highlight --html` paints every identifier the one colour. The header of `highlights.scm` says the engine is first-match-wins; this CLI is not, for an identifier that the fallback also captures. So `variadic.lu` was rewritten to assert the ellipsis alone (`15d928e`), red at `15d928e` itself (`g3/ts-test.log`: `expected highlight 'punctuation.special', actual highlights: none.`) and at trunk's grammar (`g3/ts-test-trunk-grammar.log`: `actual highlights: 'operator'`, the `..` of the ERROR), green at `2b9ae4f` | **partly** (an issue to file) |
+| 7 | the floor 1117 → 1188; its record and the receiver comment gain 0.2.35 and 0.2.36 | `936913a` (`FLOOR="${FLOOR:-1188}"` and the record's 0.2.35/0.2.36 paragraph), `5cf0c45` (the receiver comment) | **yes** |
+| 8 | CI green at the head; the plant red at Gate 4 by the two files' names | the PR and the plant's draft PR (their run ids are in the PR body and the hand-back; this lane does not wait on CI) | — |
+| 9 | the editors' pin does not move | wolf-lsp's branch `tl34` leaves helix `rev` and zed `commit` at `936a96f5` | **yes** |
+
+**What a reader in helix or zed sees change, once their pin moves:** a C
+membrane's `, ...` parses as one `variadic_parameter` inside an intact
+`parameters` node and paints `@punctuation.special`, where it was an `ERROR`
+that took its comma with it. Nothing else in any tree moves (1239 per-file
+verdicts, 151 old corpus cases). The prelude's seven new names need no query:
+`VaList` is a path type and the six functions are calls.
+
+## 4. Evidence index
+
+Logs on nomad under `~/lanes/tl34/`: `records/` (the release API reads, the
+tag `ls-remote`s, the darwin digests), `g0/` (trunk's grammar: the gate over
+the three corpora and the per-file verdicts), `g1/` (the red rows at
+`039ae91`), `g2/` (generate, test, queries at `fd79c3f`), `g3/` (the revised
+highlight file red at `15d928e` and at trunk's grammar), `g4/` (the head
+`2b9ae4f`: generate, test, queries, the gate over the three corpora, the
+verdicts), `g5/` and `g5-floor1189/` (the gate's four branches at `936913a`),
+`g6/` (the typed and moded ellipsis; the identifier captures). The corpora are
+`git archive` extracts of wolf-lang `v0.2.35`, `v0.2.36` and trunk
+`b16353e8` under `corpora/`; the hasu archive hashes are under
+`/home/mfwolffe/lanes/tl34/acquire/`. The tag comparisons (the EBNF and the
+grammar chapter, the parser, lexer and formatter trees, the corpus path sets,
+the prelude's `(name, kind)` and mark sets) were read from git objects in a
+blobless clone with `git rev-parse <tag>:<path>`, `git diff --name-status`
+and a Python key-set diff; nothing of the compiler was built or read.
