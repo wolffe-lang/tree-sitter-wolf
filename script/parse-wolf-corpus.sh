@@ -307,12 +307,31 @@ TS="${TREE_SITTER:-./node_modules/.bin/tree-sitter}"
 # added. The boundary and the ERROR branch are witnessed as before
 # (`docs/spec-findings-tl31.md`).
 #
+# Not re-measured at v0.2.35 = `cf0c13d3` (tl33 moved a query and a corpus
+# case, not this file): 1217 `.lu` files, 40 parse-tier counter-examples
+# excluded (s252's `grammar/if_brace_next_line` and `typecheck/int_not_tilde`
+# joined), 1177 gated green by the receiver at the tag (run 39925733584)
+# against the old floor. Re-measured 1188 at v0.2.36 = `5adf3d91`
+# (2026-10-31, tl34) — 1228 `.lu` files, the same 40 excluded, zero ERROR
+# nodes, with a private TREE_SITTER_LIBDIR. 11 files added (2 fs, 2
+# membrane, 2 memory, 2 os, 3 rows), 0 modified, 0 removed, none excluded.
+# THE GRAMMAR MOVED: s263 wrote the C variadic tail into `params`
+# (`spec/grammar.ebnf` blob `29d5de10` -> `1e19bf67`, [abi.c.variadic.syntax]),
+# and the two `membrane/variadic_*` files spell it. They were this gate's red
+# from the schedule run of 2026-10-25 (40188948638, wolf-lang trunk carried
+# them before the tag) through the receiver at the tag (40744480999: 1188
+# gated, 2 failing) and every daily run after. `variadic_parameter` parses
+# both; per-file verdicts against trunk's grammar: 0 removed, those 2 changed
+# (ERR -> ok), 0 others. The floor is the release's count, not trunk's 1199.
+# The boundary and the ERROR branch are witnessed in
+# `docs/spec-findings-tl34.md`.
+#
 # The gate checks out wolf-lang's DEFAULT BRANCH, so this floor tracks
 # trunk and not a tag. Leaving it at a v0.2.2 measurement while trunk
 # carried three more files would let the gate lose three files' worth of
 # coverage without saying so, which is the whole failure the ratchet
 # exists to prevent.
-FLOOR="${FLOOR:-1117}"
+FLOOR="${FLOOR:-1188}"
 
 total=0
 skipped=0
