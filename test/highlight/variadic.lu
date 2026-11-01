@@ -1,0 +1,26 @@
+// s263 ([abi.c.variadic]) and s261 ([os.env.argv]) in the queries: the
+// ellipsis is punctuation with a meaning, the list type is a type in type
+// position, and the prelude functions paint as the calls they are (ruling
+// #77: no builtin list).
+
+extern "c" fn vprintf(fmt: *u8, ap: *VaList) -> i32
+//                                   ^ type
+
+export fn sum(n: i32, ...) -> i64 {
+//                    ^ punctuation.special
+    unsafe {
+        var ap = va_start()
+//               ^ function
+        va_end(mut ap)
+//      ^ function
+        0
+    }
+}
+
+fn main() -> !int {
+    let name = env_arg0()
+//             ^ function
+    let argv = env_args_bytes()
+//             ^ function
+    0
+}
