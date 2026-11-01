@@ -17,8 +17,10 @@ What's here:
   `!T` error rows, call-site `f(mut x)`, region caps
   (`[mem.region.cap.1]`), the contextual `then` and the bare `if`
   (`[gram.expr.if]`, s151), the alias bound `trait Num = Add + Sub`
-  (s155), literal range patterns (`[gram.pat.range]`, s147), and
-  Go-style newline termination (`[gram.lex.newline]`). Blocks take
+  (s155), literal range patterns (`[gram.pat.range]`, s147), a C
+  membrane's variadic tail `fn printf(fmt: *u8, ...)`
+  (`[abi.c.variadic.syntax]`, s263), and Go-style newline termination
+  (`[gram.lex.newline]`). Blocks take
   newline termination literally, because `expr_stmt ::= expr TERM` is what stops D69's refused struct
   literal from being re-read as a bare block.
 - `src/scanner.c`: an external scanner for `"""` multiline strings (a
@@ -46,7 +48,8 @@ parser matches `grammar.js`.
 Where highlighting benefits from tolerance, the grammar accepts a
 superset of the language. Constructs the compiler rejects with a
 diagnostic (comparison chaining, E0003; detached moded receivers,
-E0210; empty statements, E0002) still parse here. The grammar accepts
+E0210; empty statements, E0002; an ellipsis anywhere but the end of a C
+membrane's parameter list, E0822) still parse here. The grammar accepts
 everything the spec accepts; if a valid construct fails to parse, that
 is a grammar bug or a filed spec finding.
 
