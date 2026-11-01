@@ -926,3 +926,262 @@ extern "c" fn abort() -> never
     (type_path
       (path
         (identifier)))))
+
+==================
+s263: a C membrane's parameter list ends in an ellipsis ([abi.c.variadic.syntax])
+==================
+
+extern "c" fn printf(fmt: *u8, ...) -> i32
+export fn sum(n: i32, ...) -> i64 {
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (pointer_type
+          (type_path
+            (path
+              (identifier)))))
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier))))
+  (function_item
+    (function_qualifier)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal)))))
+
+==================
+s263: an ellipsis anywhere in a parameter list parses (E0822 is the membrane's refusal, not the parser's)
+==================
+
+export fn sum(n: i32, ..., last: i32) -> i64 { 0 }
+fn wolfish(n: int, ...) -> int { 0 }
+extern "c" fn bare(...) -> i32
+extern "c" fn trailing(n: i32, ...,) -> i32
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (variadic_parameter)
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier)))))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (integer_literal))))
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier))))
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier)))))
+
+==================
+s263: C's decayed va_list parameter is spelled *VaList ([abi.c.variadic.list])
+==================
+
+extern "c" fn vprintf(fmt: *u8, ap: *VaList) -> i32
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier
+      (string_literal))
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (pointer_type
+          (type_path
+            (path
+              (identifier)))))
+      (parameter
+        (identifier)
+        (pointer_type
+          (type_path
+            (path
+              (identifier))))))
+    (type_path
+      (path
+        (identifier)))))
+
+==================
+s263: the four list builtins are calls in a variadic definition ([abi.c.variadic.builtins])
+==================
+
+export fn sum(n: i32, ...) -> i64 {
+    unsafe {
+        var ap = va_start()
+        var cursor = va_copy(ap)
+        let x = va_arg[i64](mut ap)
+        va_end(mut cursor)
+        va_end(mut ap)
+        x
+    }
+}
+
+---
+
+(source_file
+  (function_item
+    (function_qualifier)
+    (identifier)
+    (parameters
+      (parameter
+        (identifier)
+        (type_path
+          (path
+            (identifier))))
+      (variadic_parameter))
+    (type_path
+      (path
+        (identifier)))
+    (block
+      (expression_statement
+        (unsafe_expression
+          (block
+            (var_declaration
+              (binder
+                (identifier)
+                (call_expression
+                  (identifier)
+                  (arguments))))
+            (var_declaration
+              (binder
+                (identifier)
+                (call_expression
+                  (identifier)
+                  (arguments
+                    (argument
+                      (identifier))))))
+            (let_declaration
+              (binder
+                (identifier)
+                (call_expression
+                  (index_expression
+                    (identifier)
+                    (identifier))
+                  (arguments
+                    (argument
+                      (parameter_mode)
+                      (identifier))))))
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (parameter_mode)
+                    (identifier)))))
+            (expression_statement
+              (call_expression
+                (identifier)
+                (arguments
+                  (argument
+                    (parameter_mode)
+                    (identifier)))))
+            (expression_statement
+              (identifier))))))))
+
+==================
+s261: the invocation name and the byte arguments are calls
+==================
+
+fn main() -> !int {
+    let name = env_arg0()
+    let argv = env_args_bytes()
+    0
+}
+
+---
+
+(source_file
+  (function_item
+    (identifier)
+    (parameters)
+    (error_union_type
+      (type_path
+        (path
+          (identifier))))
+    (block
+      (let_declaration
+        (binder
+          (identifier)
+          (call_expression
+            (identifier)
+            (arguments))))
+      (let_declaration
+        (binder
+          (identifier)
+          (call_expression
+            (identifier)
+            (arguments))))
+      (expression_statement
+        (integer_literal)))))
