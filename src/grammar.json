@@ -902,8 +902,16 @@
         {
           "type": "SYMBOL",
           "name": "self_parameter"
+        },
+        {
+          "type": "SYMBOL",
+          "name": "variadic_parameter"
         }
       ]
+    },
+    "variadic_parameter": {
+      "type": "STRING",
+      "value": "..."
     },
     "parameter": {
       "type": "SEQ",

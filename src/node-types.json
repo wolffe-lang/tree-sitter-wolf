@@ -9594,6 +9594,10 @@
         {
           "type": "self_parameter",
           "named": true
+        },
+        {
+          "type": "variadic_parameter",
+          "named": true
         }
       ]
     }
@@ -14488,6 +14492,10 @@
   {
     "type": "var",
     "named": false
+  },
+  {
+    "type": "variadic_parameter",
+    "named": true
   },
   {
     "type": "weak",
