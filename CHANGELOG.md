@@ -1,5 +1,28 @@
 # Changelog
 
+## tl34 — 2026-10-31 — the C variadic tail at v0.2.36; the floor at 1188
+
+**The grammar moved in wolf 0.2.36, by one production**: s263 wrote a C
+membrane's final `, ...` into `params` (`spec/grammar.ebnf` blob `29d5de10` →
+`1e19bf67`, `[abi.c.variadic.syntax]`), and wolf-lang's two
+`membrane/variadic_*` corpus files had kept this repository's daily gate red
+since 2026-10-25 (run 40188948638; the release dispatch, 40744480999, red at
+the tag). **`variadic_parameter`** is now a member of any parameter list at
+any position: the spec refuses the misplaced, the lone and the ordinary
+function's ellipsis as E0822, a membrane-tier code, so they parse here, as
+comparison chains do; a typed or moded ellipsis stays an ERROR. It paints
+`@punctuation.special`. Five corpus cases (three red at trunk's grammar, two
+pinning `*VaList` and s261's argv calls) and a highlight file, red first.
+**The floor ratchets 1117 → 1188**, the count at `5adf3d91` = `v0.2.36` (1228
+`.lu`, 40 excluded); per-file verdicts against trunk's grammar move exactly
+the two membrane files, over all 1239 paths at wolf-lang trunk. The prelude's
+seven new names need no query (`VaList` is a path type, the six functions are
+calls; ruling #77). Found on the way: the 0.26.13 CLI paints every identifier
+with the `(identifier) @variable` fallback, whatever else captures it, so a
+highlight test cannot assert an identifier's capture.
+`docs/spec-findings-tl34.md` has the contract, the prediction and the
+evidence; the wolf-lsp half is wolf-lsp `docs/PIN-0236.md`.
+
 ## tl31 — 2026-10-21 — the floor at v0.2.34; comments start at their own `//` (#27)
 
 **Nothing grammatical moved in wolf 0.2.34**: `spec/grammar.ebnf` is the same
