@@ -331,7 +331,21 @@ module.exports = grammar({
 
     parameters: $ => seq('(', commaSep($._parameter), ')'),
 
-    _parameter: $ => choice($.parameter, $.self_parameter),
+    _parameter: $ => choice($.parameter, $.self_parameter, $.variadic_parameter),
+
+    // `extern "c" fn printf(fmt: *u8, ...) -> i32` (s263, wolf-lang
+    // `5adf3d91`, v0.2.36; [abi.c.variadic.syntax]): a C membrane's list may
+    // end in `, ...`. The EBNF's production is
+    // `params ::= param (',' param)* (',' '...' | ','?)`, and the clause puts
+    // every other placement — `(n: i32, ..., last: i32)`, a lone `(...)`, an
+    // ordinary `fn` with one — at E0822, a membrane-tier refusal, not a
+    // parse-tier one. So, as with comparison chains, the grammar takes the
+    // superset: the ellipsis is a member of any parameter list at any
+    // position, with the list's trailing comma. "The ellipsis has no name,
+    // type or passing mode", so a typed or moded one (`...: i32`, `mut ...`)
+    // is no spelling here and stays an ERROR. One token, `...`, valid only
+    // where a parameter may stand, where `..` and `..=` never are.
+    variadic_parameter: _ => '...',
 
     parameter: $ => seq(
       optional($.parameter_mode),
