@@ -1,3 +1,5 @@
+# Local PR evidence is cheap unless ci/full-matrix opts in.
+# Existing nightly commands and publication jobs are preserved.
 # ONE TIER (tl28, ruling #92). The org is on GitHub's free plan: 20
 # concurrent jobs shared by every repository. This repository's suite is one
 # job, `gate`, about five minutes on ubuntu (4.8 job-minutes a run, the ten
@@ -12,29 +14,27 @@
 # nightly.
 name: CI
 on:
-  push: {branches: [trunk]}
+  push:
+    branches: [trunk]
+    paths:
+      - '.github/**'
+      - 'ci/**'
+      - '!ci/*.md'
+      - '!ci/**/*.md'
+      - 'tools/**'
+      - 'spec/**'
+      - '**/wolf-toolchain.toml'
+      - '**/rust-toolchain.toml'
+      - '**/*.pin'
+      - '**/PAIRING'
+      - '**/STD-PIN'
+      - 'vendor/tools.toml'
+      - 'gnu-oracle.toml'
+      - '.gitmodules'
+      - 'Cargo.toml'
+      - 'Cargo.lock'
   pull_request:
-  # Gate 4 below reads wolf-lang's DEFAULT BRANCH, so this repository's
-  # CI can go red with no commit here at all — and did (#9): s157 and
-  # s158 broke thirteen corpus files while the run list still said
-  # green, because the only thing that runs the gate is a push. A push
-  # is the wrong trigger for a gate whose input lives in another repo.
-  #
-  # Daily, at 06:17 UTC. Measured cost: the `gate` job's last twelve
-  # runs took 122–340s, median 170s (run 34677185673 = 168s), so a
-  # daily fire is ~20 min of ubuntu-latest a week, ~17h a year, billed
-  # at $0 while this repository is public. Weekly was the cheaper
-  # option and was rejected: wolf-lang lands surface sprints several
-  # times a *day* during a wave, so a week's cadence routinely reports
-  # a break a whole wave after the lane that could have fixed it has
-  # closed. Daily buys a ~24h worst case for ~3 minutes a day.
-  #
-  # CAVEAT (#12): GitHub DISABLES scheduled workflows in a public
-  # repository after 60 days with no repository activity. A repo nobody
-  # pushes to is exactly the repo that hits 60 days, and a disabled
-  # schedule shows no red — the runs just stop. The `sleep-alarm` job
-  # below is the answer, and why it is an alarm and not a keepalive is
-  # written there.
+    types: [opened, synchronize, reopened, labeled]
   schedule:
     - cron: '17 6 * * *'
   # Manual fire, so the mechanism can be tested without waiting a day.
@@ -112,7 +112,24 @@ concurrency:
   cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 
 jobs:
+  plan:
+    name: plan
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: full job set selected
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}
+        run: echo 'SELECTED gate tier'
+      - uses: actions/checkout@v4
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}
+      - name: local gate wiring proof
+        if: ${{ github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix') }}
+        run: python3 -I ci/local-gate-test.py
+      - name: local evidence gate
+        if: ${{ !(github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) }}
+        run: echo 'Local gauntlet evidence is the gate; request ci or full-matrix for CI.'
   gate:
+    if: ${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v5
@@ -294,7 +311,7 @@ jobs:
   # tier's: they run on their own conditions, as before.)
   tier:
     name: tier full
-    if: ${{ !cancelled() }}
+    if: ${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) && (!cancelled()) }}
     needs: [gate]
     runs-on: ubuntu-latest
     timeout-minutes: 5

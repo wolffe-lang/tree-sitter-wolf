@@ -50,10 +50,10 @@ for j in JOBS:
     blocks[j] = m.group(1) if m else ""
 
 # --- T4 the wiring ---------------------------------------------------------------
-say(JOBS == ["gate", "sleep-alarm", "notify", "tier"], "T4 the workflow's jobs: %s" % " ".join(JOBS))
+say(JOBS == ["plan", "gate", "sleep-alarm", "notify", "tier"], "T4 the workflow's jobs: %s" % " ".join(JOBS))
 t = blocks["tier"]
 say("    name: tier full\n" in t and "    needs: [gate]\n" in t, "T4 the verdict job is named tier full and needs the gate")
-say(re.findall(r"^    if: (.*)$", t, re.M) == ["${{ !cancelled() }}"], "T4 the tier job runs on !cancelled(), never always()")
+say(re.findall(r"^    if: (.*)$", t, re.M) == ["${{ (github.event_name != 'pull_request' || contains(github.event.pull_request.labels.*.name, 'full-matrix') || contains(github.event.pull_request.labels.*.name, 'ci') || contains(github.event.pull_request.labels.*.name, 'release-matrix')) && (!cancelled()) }}"], "T4 the tier job runs on !cancelled(), never always()")
 say("        run: python3 ci/tiers-test.py\n" in t and "        run: python3 ci/tiers.py verdict\n" in t
     and t.index("ci/tiers-test.py") < t.index("ci/tiers.py verdict") and "          NEEDS: ${{ toJSON(needs) }}\n" in t,
     "T4 the tier job proves the wiring, then checks the verdict over toJSON(needs)")
@@ -62,7 +62,7 @@ g = re.search(r"^concurrency:\n  group: (.*)$", wf, re.M)
 g = g.group(1) if g else ""
 say(g.endswith("|| format('ci-{0}-{1}', github.event_name, github.run_id) }}") and "format('ci-pr-{0}', github.head_ref)" in g,
     "T4 a pull request's runs share a group per branch; every other run has a group of its own run id")
-say("  push: {branches: [trunk]}\n" in wf, "T4 a push runs on trunk alone")
+say("  push:\n    branches: [trunk]\n" in wf, "T4 a push runs on trunk alone")
 say(re.search(r"^  pull_request:\n", wf, re.M) is not None, "T4 a pull request runs")
 say(re.search(r"^  schedule:\n    - cron: ", wf, re.M) is not None, "T4 the daily schedule runs")
 say("  repository_dispatch:\n    types: [wolf-lang-corpus]\n" in wf, "T4 a release's dispatch runs")
