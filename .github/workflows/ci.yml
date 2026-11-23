@@ -292,11 +292,11 @@ jobs:
             gh issue comment "$existing" --repo "$REPO" --body "$BODY"
           else
             echo "opening a new issue"
-            # tl28 (ruling #92): every repository's unattended red carries
-            # one label, so the next lane on it can find what it owes. The
-            # label may exist already; that is not a failure.
-            gh label create nightly-red --repo "$REPO" --color B60205 \
-              --description "a scheduled run on trunk is red; the next lane on the repo owes it" >/dev/null 2>&1 || true
+            # Every repository's unattended red carries one label. It may
+            # exist already: --force keeps its description current, and a
+            # refusal is no failure.
+            gh label create nightly-red --repo "$REPO" --color B60205 --force \
+              --description "a scheduled run on trunk is red; to be looked at before the next merge" >/dev/null 2>&1 || true
             gh issue create --repo "$REPO" \
               --title "CI: $MARKER ($(date -u +%Y-%m-%d))" \
               --label nightly-red \
