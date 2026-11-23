@@ -296,7 +296,7 @@ jobs:
             # exist already: --force keeps its description current, and a
             # refusal is no failure.
             gh label create nightly-red --repo "$REPO" --color B60205 --force \
-              --description "a scheduled run on trunk is red; to be looked at before the next merge" >/dev/null 2>&1 || true
+              --description "a scheduled run on trunk is red; to be looked at before the next lane merges" >/dev/null 2>&1 || true
             gh issue create --repo "$REPO" \
               --title "CI: $MARKER ($(date -u +%Y-%m-%d))" \
               --label nightly-red \
